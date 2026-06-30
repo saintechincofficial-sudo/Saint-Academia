@@ -45,6 +45,69 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
+.student-form {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.student-form input,
+.student-form select,
+.student-form button {
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  font: inherit;
+}
+
+.student-form button {
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.report-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.report-grid div {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.report-grid strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #334155;
+}
+
+.message {
+  margin-top: 0.8rem;
+  color: #0f766e;
+  font-weight: 600;
+}
+
+.list-stack {
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.table-card table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-card th,
+.table-card td {
+  text-align: left;
+  padding: 0.7rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
 pre {
   background: #0f172a;
   color: #f8fafc;

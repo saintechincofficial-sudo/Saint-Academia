@@ -132,3 +132,41 @@ CREATE TABLE IF NOT EXISTS attendance_records (
   FOREIGN KEY (student_id) REFERENCES students(id),
   UNIQUE KEY session_student (session_id, student_id)
 );
+
+CREATE TABLE IF NOT EXISTS fee_invoices (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  school_id INT NOT NULL,
+  student_id INT NOT NULL,
+  academic_year_id INT NOT NULL,
+  invoice_number VARCHAR(100) NOT NULL,
+  amount_due DECIMAL(10,2) NOT NULL,
+  amount_paid DECIMAL(10,2) NOT NULL DEFAULT 0,
+  balance DECIMAL(10,2) NOT NULL DEFAULT 0,
+  status VARCHAR(20) NOT NULL DEFAULT 'unpaid',
+  invoice_date DATE NOT NULL,
+  due_date DATE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_id) REFERENCES students(id),
+  FOREIGN KEY (academic_year_id) REFERENCES academic_years(id)
+);
+
+CREATE TABLE IF NOT EXISTS exam_results (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  school_id INT NOT NULL,
+  student_id INT NOT NULL,
+  subject_id INT NOT NULL,
+  class_id INT NOT NULL,
+  term_id INT NOT NULL,
+  exam_type VARCHAR(50) NOT NULL,
+  score DECIMAL(5,2) NOT NULL,
+  max_score DECIMAL(5,2) NOT NULL DEFAULT 100,
+  grade VARCHAR(5),
+  remarks VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_id) REFERENCES students(id),
+  FOREIGN KEY (subject_id) REFERENCES subjects(id),
+  FOREIGN KEY (class_id) REFERENCES classes(id),
+  FOREIGN KEY (term_id) REFERENCES terms(id)
+);
