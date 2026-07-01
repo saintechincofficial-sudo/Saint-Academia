@@ -2,6 +2,9 @@
 require_once __DIR__ . '/config/constants.php';
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/utils/Response.php';
+require_once __DIR__ . '/utils/JWTHandler.php';
+require_once __DIR__ . '/middleware/Auth.php';
+require_once __DIR__ . '/middleware/CORSMiddleware.php';
 require_once __DIR__ . '/controllers/HealthController.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/StudentController.php';
@@ -13,9 +16,17 @@ require_once __DIR__ . '/controllers/ReportController.php';
 require_once __DIR__ . '/controllers/SubjectController.php';
 require_once __DIR__ . '/controllers/ResultController.php';
 
+// Handle CORS
+CORSMiddleware::handle();
+
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = trim($uri, '/');
 $segments = $path === '' ? [] : explode('/', $path);
+
+// Strip project directory from path
+if (($segments[0] ?? '') === 'SaintAcademia') {
+    array_shift($segments);
+}
 
 if (($segments[0] ?? '') === 'api') {
     array_shift($segments);
@@ -34,7 +45,6 @@ if ($resource === 'auth' && isset($segments[1]) && $segments[1] === 'login') {
         Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
         return;
     }
-
     Response::json(AuthController::login());
     return;
 }
@@ -44,12 +54,10 @@ if ($resource === 'students') {
         Response::json(StudentController::index());
         return;
     }
-
     if ($method === 'POST') {
         Response::json(StudentController::create());
         return;
     }
-
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
     return;
 }
@@ -59,12 +67,10 @@ if ($resource === 'staff') {
         Response::json(StaffController::index());
         return;
     }
-
     if ($method === 'POST') {
         Response::json(StaffController::create());
         return;
     }
-
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
     return;
 }
@@ -74,12 +80,10 @@ if ($resource === 'classes') {
         Response::json(ClassController::index());
         return;
     }
-
     if ($method === 'POST') {
         Response::json(ClassController::create());
         return;
     }
-
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
     return;
 }
@@ -89,12 +93,10 @@ if ($resource === 'subjects') {
         Response::json(SubjectController::index());
         return;
     }
-
     if ($method === 'POST') {
         Response::json(SubjectController::create());
         return;
     }
-
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
     return;
 }
@@ -104,12 +106,10 @@ if ($resource === 'results') {
         Response::json(ResultController::index());
         return;
     }
-
     if ($method === 'POST') {
         Response::json(ResultController::create());
         return;
     }
-
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
     return;
 }
@@ -119,12 +119,10 @@ if ($resource === 'attendance') {
         Response::json(AttendanceController::index());
         return;
     }
-
     if ($method === 'POST') {
         Response::json(AttendanceController::create());
         return;
     }
-
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
     return;
 }
@@ -134,17 +132,14 @@ if ($resource === 'fees') {
         Response::json(FeeController::index());
         return;
     }
-
     if ($method === 'POST') {
         if (isset($segments[1]) && $segments[1] === 'pay') {
             Response::json(FeeController::pay());
             return;
         }
-
         Response::json(FeeController::create());
         return;
     }
-
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
     return;
 }
@@ -154,7 +149,6 @@ if ($resource === 'reports') {
         Response::json(ReportController::index());
         return;
     }
-
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
     return;
 }
