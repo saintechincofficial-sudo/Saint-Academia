@@ -1,109 +1,105 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
 
 class StudentController {
+    
     public static function index(): array {
         try {
-            $pdo = getDatabaseConnection();
-            $stmt = $pdo->query(
-                'SELECT id, student_number, first_name, last_name, email, phone, status FROM students ORDER BY id DESC LIMIT 50'
-            );
-
-            return [
-                'success' => true,
-                'students' => $stmt->fetchAll(),
-            ];
-        } catch (Throwable $e) {
-            return [
-                'success' => false,
-                'message' => 'Unable to load students',
-                'error' => $e->getMessage(),
-            ];
-        }
-    }
-
-    public static function create(): array {
-        $rawBody = file_get_contents('php://input');
-        $body = [];
-
-        if (!empty($rawBody)) {
-            $decodedJson = json_decode($rawBody, true);
-            if (is_array($decodedJson)) {
-                $body = $decodedJson;
+            $model = new Student();
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 25;
+            $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+            
+            if (!empty($search)) {
+                $students = $model->search($search, $page, $limit);
             } else {
-                parse_str($rawBody, $body);
+                $students = $model->getAll($page, $limit);
             }
-        }
-
-        if ($body === []) {
-            $body = $_POST;
-        }
-
-        $studentNumber = trim((string) ($body['student_number'] ?? ''));
-        $firstName = trim((string) ($body['first_name'] ?? ''));
-        $lastName = trim((string) ($body['last_name'] ?? ''));
-        $email = trim((string) ($body['email'] ?? ''));
-        $phone = trim((string) ($body['phone'] ?? ''));
-
-        if ($studentNumber === '' || $firstName === '' || $lastName === '') {
-            return ['success' => false, 'message' => 'Student number, first name and last name are required'];
-        }
-
-        try {
-            $pdo = getDatabaseConnection();
-            $schoolId = self::ensureSchool();
-
-            $stmt = $pdo->prepare(
-                'INSERT INTO students (school_id, student_number, first_name, last_name, email, phone, status, created_at)
-                 VALUES (:school_id, :student_number, :first_name, :last_name, :email, :phone, :status, NOW())'
-            );
-
-            $stmt->execute([
-                ':school_id' => $schoolId,
-                ':student_number' => $studentNumber,
-                ':first_name' => $firstName,
-                ':last_name' => $lastName,
-                ':email' => $email,
-                ':phone' => $phone,
-                ':status' => 'active',
-            ]);
-
+            
+            $total = $model->getCount();
+            $pages = ceil($total / $limit);
+            
             return [
                 'success' => true,
-                'message' => 'Student created successfully',
-                'student' => [
-                    'id' => (int) $pdo->lastInsertId(),
-                    'student_number' => $studentNumber,
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'email' => $email,
-                    'phone' => $phone,
-                    'status' => 'active',
-                ],
+                'students' => $students,
+                'pagination' => [
+                    'current_page' => $page,
+                    'total_pages' => $pages,
+                    'total_items' => $total,
+                    'per_page' => $limit
+                ]
             ];
-        } catch (Throwable $e) {
-            return [
-                'success' => false,
-                'message' => 'Unable to create student',
-                'error' => $e->getMessage(),
-            ];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to fetch students', 'error' => $e->getMessage()];
         }
     }
-
-    private static function ensureSchool(): int {
-        $pdo = getDatabaseConnection();
-        $stmt = $pdo->query('SELECT id FROM schools ORDER BY id LIMIT 1');
-        $school = $stmt->fetch();
-
-        if ($school) {
-            return (int) $school['id'];
+    
+    public static function show(): array {
+        try {
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if (!$id) {
+                return ['success' => false, 'message' => 'Student ID is required'];
+            }
+            
+            $model = new Student();
+            $student = $model->getById($id);
+            
+            if (!$student) {
+                return ['success' => false, 'message' => 'Student not found'];
+            }
+            
+            return ['success' => true, 'student' => $student];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to fetch student', 'error' => $e->getMessage()];
         }
-
-        $pdo->prepare('INSERT INTO schools (name, email) VALUES (?, ?)')->execute([
-            'SaintAcademia',
-            'info@saintacademia.com',
-        ]);
-
-        return (int) $pdo->lastInsertId();
+    }
+    
+    public static function create(): array {
+        try {
+            $body = json_decode(file_get_contents('php://input'), true) ?: [];
+            if (empty($body)) {
+                $body = $_POST ?? [];
+            }
+            
+            $model = new Student();
+            $result = $model->create($body);
+            return $result;
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to create student', 'error' => $e->getMessage()];
+        }
+    }
+    
+    public static function update(): array {
+        try {
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if (!$id) {
+                return ['success' => false, 'message' => 'Student ID is required'];
+            }
+            
+            $body = json_decode(file_get_contents('php://input'), true) ?: [];
+            if (empty($body)) {
+                $body = $_POST ?? [];
+            }
+            
+            $model = new Student();
+            $result = $model->update($id, $body);
+            return $result;
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to update student', 'error' => $e->getMessage()];
+        }
+    }
+    
+    public static function delete(): array {
+        try {
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if (!$id) {
+                return ['success' => false, 'message' => 'Student ID is required'];
+            }
+            
+            $model = new Student();
+            $result = $model->delete($id);
+            return $result;
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to delete student', 'error' => $e->getMessage()];
+        }
     }
 }

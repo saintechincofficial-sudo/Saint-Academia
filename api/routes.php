@@ -5,6 +5,7 @@ require_once __DIR__ . '/utils/Response.php';
 require_once __DIR__ . '/utils/JWTHandler.php';
 require_once __DIR__ . '/middleware/Auth.php';
 require_once __DIR__ . '/middleware/CORSMiddleware.php';
+require_once __DIR__ . '/models/Student.php';
 require_once __DIR__ . '/controllers/HealthController.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/StudentController.php';
@@ -16,14 +17,12 @@ require_once __DIR__ . '/controllers/ReportController.php';
 require_once __DIR__ . '/controllers/SubjectController.php';
 require_once __DIR__ . '/controllers/ResultController.php';
 
-// Handle CORS
 CORSMiddleware::handle();
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = trim($uri, '/');
 $segments = $path === '' ? [] : explode('/', $path);
 
-// Strip project directory from path
 if (($segments[0] ?? '') === 'SaintAcademia') {
     array_shift($segments);
 }
@@ -50,6 +49,24 @@ if ($resource === 'auth' && isset($segments[1]) && $segments[1] === 'login') {
 }
 
 if ($resource === 'students') {
+    if (isset($segments[1]) && is_numeric($segments[1])) {
+        $_GET['id'] = $segments[1];
+        if ($method === 'GET') {
+            Response::json(StudentController::show());
+            return;
+        }
+        if ($method === 'PUT') {
+            Response::json(StudentController::update());
+            return;
+        }
+        if ($method === 'DELETE') {
+            Response::json(StudentController::delete());
+            return;
+        }
+        Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
+        return;
+    }
+    
     if ($method === 'GET') {
         Response::json(StudentController::index());
         return;

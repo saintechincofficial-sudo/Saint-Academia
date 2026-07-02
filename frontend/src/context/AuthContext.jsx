@@ -2,6 +2,8 @@ import { createContext, useState, useEffect, useCallback } from 'react';
 
 export const AuthContext = createContext();
 
+const API_BASE_URL = 'http://localhost/SaintAcademia/api';
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => localStorage.getItem('auth_token'));
@@ -31,7 +33,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     
     try {
-      const response = await fetch('/SaintAcademia/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -49,7 +51,7 @@ export function AuthProvider({ children }) {
       setError(data.message || 'Login failed');
       return { success: false, message: data.message };
     } catch (err) {
-      setError('Unable to connect to server');
+      setError('Unable to connect to server: ' + err.message);
       return { success: false, message: 'Unable to connect to server' };
     } finally {
       setLoading(false);

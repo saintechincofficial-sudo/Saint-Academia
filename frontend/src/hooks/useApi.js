@@ -1,10 +1,14 @@
 import { useCallback } from 'react';
 import { useAuth } from './useAuth';
 
+const API_BASE_URL = 'http://localhost/SaintAcademia/api';
+
 export function useApi() {
   const { token, logout } = useAuth();
 
-  const apiCall = useCallback(async (url, options = {}) => {
+  const apiCall = useCallback(async (endpoint, options = {}) => {
+    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers

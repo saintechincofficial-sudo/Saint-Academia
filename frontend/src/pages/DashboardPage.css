@@ -9,10 +9,13 @@
   background: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .header-content {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 20px;
   display: flex;
@@ -61,33 +64,96 @@
   background: #c0392b;
 }
 
+.dashboard-nav {
+  background: white;
+  border-bottom: 1px solid #eee;
+  padding: 0;
+  display: flex;
+  gap: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.nav-btn {
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+}
+
+.nav-btn:hover {
+  color: #333;
+  background: #f9f9f9;
+}
+
+.nav-btn.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+}
+
 .dashboard-main {
   flex: 1;
-  max-width: 1200px;
-  margin: 40px auto;
-  padding: 0 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 30px 20px;
   width: 100%;
 }
 
-.welcome-card {
-  background: white;
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.welcome-card h2 {
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.section-header h2 {
+  margin: 0;
   color: #333;
-  margin-top: 0;
+  font-size: 20px;
 }
 
-.welcome-card p {
-  color: #666;
-  line-height: 1.6;
-}
-
-.build-message {
-  color: #667eea;
+.btn-primary {
+  padding: 12px 24px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
   font-weight: 600;
-  margin-top: 20px;
+  transition: background 0.3s;
+}
+
+.btn-primary:hover {
+  background: #5568d3;
+}
+
+.coming-soon {
+  background: white;
+  border-radius: 8px;
+  padding: 60px 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.coming-soon h2 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.coming-soon p {
+  color: #999;
+  font-size: 16px;
 }
