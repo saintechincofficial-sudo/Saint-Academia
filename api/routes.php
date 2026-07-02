@@ -185,6 +185,19 @@ if ($resource === 'classes') {
 }
 
 if ($resource === 'subjects') {
+    if (isset($segments[1]) && is_numeric($segments[1])) {
+        $_GET['id'] = $segments[1];
+        if ($method === 'PUT') {
+            Response::json(SubjectController::update());
+            return;
+        }
+        if ($method === 'DELETE') {
+            Response::json(SubjectController::delete());
+            return;
+        }
+        Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
+        return;
+    }
     if ($method === 'GET') {
         Response::json(SubjectController::index());
         return;
