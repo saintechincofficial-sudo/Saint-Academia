@@ -221,3 +221,47 @@
   background: #e4e8ff;
   transform: translateY(-1px);
 }
+
+/* ── Phase 2 shared styles ─────────────────────────────────── */
+.subtitle     { font-size: 13px; color: #666; margin-left: 8px; }
+.filter-bar   { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+.select-input { padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; min-width: 180px; }
+.form-card    { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+.form-row     { display: flex; gap: 16px; flex-wrap: wrap; }
+.form-group   { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px; }
+.form-group label { font-size: 13px; font-weight: 600; color: #444; }
+.form-group input, .form-group select { padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+.form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; }
+.error-banner   { background: #fdecea; color: #c0392b; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid #c0392b; }
+.success-banner { background: #eafaea; color: #2E9E4E; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid #2E9E4E; }
+.loading-text   { color: #888; font-style: italic; padding: 24px 0; text-align: center; }
+.empty-text     { color: #888; font-style: italic; padding: 12px 0; }
+.empty-row      { text-align: center; color: #888; font-style: italic; padding: 24px !important; }
+.empty-panel    { background: #FDF2D0; border-left: 4px solid #B8730A; padding: 16px 20px; border-radius: 6px; margin-top: 16px; }
+.empty-panel p  { margin: 4px 0; font-size: 14px; }
+.coef-badge     { background: #1B2A4A; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+.coef-total     { margin-top: 12px; font-size: 14px; color: #444; padding: 8px 12px; background: #EBF1F8; border-radius: 6px; display: inline-block; }
+.btn-icon       { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; cursor: pointer; margin: 0 2px; font-size: 14px; }
+.btn-icon:hover { background: #f0f0f0; }
+.btn-icon.danger:hover { background: #fdecea; border-color: #c0392b; }
+.btn-large      { padding: 10px 24px; font-size: 15px; }
+.btn-secondary  { padding: 7px 14px; background: #f0f4f8; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-size: 13px; }
+.btn-secondary:hover { background: #e0e8f0; }
+.enrollment-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.enrollment-panel { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px; padding: 16px; }
+.enrollment-panel h3 { margin: 0 0 12px; color: #1B2A4A; font-size: 15px; }
+.select-all-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; }
+.row-selected td { background: #EBF1F8 !important; }
+.entry-header   { background: #EBF1F8; padding: 10px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 14px; }
+.mark-input     { width: 64px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size: 14px; }
+.points-cell    { color: #1B2A4A; font-weight: bold; font-size: 13px; }
+.grade-cell     { font-weight: bold; font-size: 13px; }
+.grade-A\+, .grade-A  { color: #2E9E4E; }
+.grade-B\+, .grade-B  { color: #1E88C7; }
+.grade-C { color: #B8730A; }
+.grade-D { color: #e67e22; }
+.grade-F { color: #c0392b; }
+.data-table     { width: 100%; border-collapse: collapse; font-size: 14px; }
+.data-table th  { background: #1B2A4A; color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; }
+.data-table td  { padding: 9px 12px; border-bottom: 1px solid #e8e8e8; vertical-align: middle; }
+.data-table tr:hover td { background: #f0f4f8; }

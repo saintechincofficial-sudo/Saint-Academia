@@ -7,40 +7,53 @@ import ClassPage from './ClassPage';
 import DashboardSummary from '../components/DashboardSummary/DashboardSummary';
 import SuperAdminSchools from '../components/SuperAdminSchools/SuperAdminSchools';
 import SchoolProfile from '../components/SchoolProfile/SchoolProfile';
+import SubjectsPage from './SubjectsPage';
+import EnrollmentPage from './EnrollmentPage';
+import ResultsPage from './ResultsPage';
+import MastersheetPage from './MastersheetPage';
 import './DashboardPage.css';
 
 function DashboardPage() {
   const { user, logout } = useAuth();
-  const [showStudentForm, setShowStudentForm] = useState(false);
-  const [editingStudent, setEditingStudent] = useState(null);
+  const [showStudentForm, setShowStudentForm]             = useState(false);
+  const [editingStudent, setEditingStudent]               = useState(null);
   const [studentRefreshTrigger, setStudentRefreshTrigger] = useState(0);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab]                         = useState('overview');
 
-  const handleLogout = () => {
-    logout();
-    window.location.href = '/';
-  };
+  const handleLogout = () => { logout(); window.location.href = '/'; };
 
   const handleAddStudent = () => {
     setEditingStudent(null);
     setShowStudentForm(true);
   };
-
-  const handleEditStudent = (student) => {
-    setEditingStudent(student);
+  const handleEditStudent = (s) => {
+    setEditingStudent(s);
     setShowStudentForm(true);
   };
-
-  const handleStudentFormSubmit = () => {
+  const handleStudentSubmit = () => {
     setShowStudentForm(false);
     setEditingStudent(null);
-    setStudentRefreshTrigger(prev => prev + 1);
+    setStudentRefreshTrigger(p => p + 1);
   };
-
-  const handleStudentFormCancel = () => {
+  const handleStudentCancel = () => {
     setShowStudentForm(false);
     setEditingStudent(null);
   };
+
+  const allTabs = [
+    { id: 'overview',    label: '🏠 Overview',    roles: ['super_admin','school_admin'] },
+    { id: 'students',    label: '👥 Students',    roles: ['super_admin','school_admin'] },
+    { id: 'staff',       label: '👨‍🏫 Staff',      roles: ['super_admin','school_admin'] },
+    { id: 'classes',     label: '🏫 Classes',     roles: ['super_admin','school_admin'] },
+    { id: 'subjects',    label: '📚 Subjects',    roles: ['school_admin'] },
+    { id: 'enrollment',  label: '📋 Enrollment',  roles: ['school_admin'] },
+    { id: 'results',     label: '✏️ Results',      roles: ['school_admin'] },
+    { id: 'mastersheet', label: '📊 Mastersheet', roles: ['school_admin'] },
+    { id: 'schools',     label: '🏢 Schools',     roles: ['super_admin'] },
+    { id: 'school',      label: '🏫 My School',   roles: ['school_admin'] },
+  ];
+
+  const tabs = allTabs.filter(t => t.roles.includes(user?.role));
 
   return (
     <div className="dashboard-container">
@@ -50,79 +63,57 @@ function DashboardPage() {
           <div className="user-info">
             <span>{user?.email}</span>
             <span className="role-badge">{user?.role}</span>
-            <button onClick={handleLogout} className="logout-btn">
-              Logout
-            </button>
+            <button onClick={handleLogout} className="logout-btn">Logout</button>
           </div>
         </div>
       </header>
 
       <nav className="dashboard-nav">
-        <button
-          className={`nav-btn ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          🏠 Overview
-        </button>
-        <button 
-          className={`nav-btn ${activeTab === 'students' ? 'active' : ''}`}
-          onClick={() => setActiveTab('students')}
-        >
-          👥 Students
-        </button>
-        <button 
-          className={`nav-btn ${activeTab === 'staff' ? 'active' : ''}`}
-          onClick={() => setActiveTab('staff')}
-        >
-          👨‍🏫 Staff
-        </button>
-        <button 
-          className={`nav-btn ${activeTab === 'classes' ? 'active' : ''}`}
-          onClick={() => setActiveTab('classes')}
-        >
-          🏫 Classes
-        </button>
-        {user?.role === 'super_admin' ? (
-          <button
-            className={`nav-btn ${activeTab === 'schools' ? 'active' : ''}`}
-            onClick={() => setActiveTab('schools')}
-          >
-            🏢 Schools
+        {tabs.map(t => (
+          <button key={t.id}
+            className={`nav-btn ${activeTab === t.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(t.id)}>
+            {t.label}
           </button>
-        ) : (
-          <button
-            className={`nav-btn ${activeTab === 'school' ? 'active' : ''}`}
-            onClick={() => setActiveTab('school')}
-          >
-            🏫 My School
-          </button>
-        )}
+        ))}
       </nav>
 
       <main className="dashboard-main">
+
         {activeTab === 'overview' && (
           <div className="tab-content">
             <DashboardSummary />
             <div className="overview-card-grid">
               <div className="overview-card">
                 <h3>Quick access</h3>
-                <p>Jump directly into student, staff, and class management.</p>
                 <div className="overview-actions">
                   <button className="btn-secondary" onClick={() => setActiveTab('students')}>Students</button>
                   <button className="btn-secondary" onClick={() => setActiveTab('staff')}>Staff</button>
                   <button className="btn-secondary" onClick={() => setActiveTab('classes')}>Classes</button>
+                  <button className="btn-secondary" onClick={() => setActiveTab('subjects')}>Subjects</button>
+                  <button className="btn-secondary" onClick={() => setActiveTab('enrollment')}>Enrollment</button>
+                  <button className="btn-secondary" onClick={() => setActiveTab('results')}>Results</button>
+                  <button className="btn-secondary" onClick={() => setActiveTab('mastersheet')}>Mastersheet</button>
                 </div>
               </div>
               <div className="overview-card">
-                <h3>Classes overview</h3>
-                <p>Classes are the next module to expand. This space will eventually contain class lists, levels, streams, and academic planning.</p>
+                <h3>Setup order</h3>
+                <ol style={{ paddingLeft: 18, fontSize: 13, lineHeight: 2 }}>
+                  <li>Add <strong>Subjects</strong> with coefficients</li>
+                  <li>Create <strong>Classes</strong></li>
+                  <li>Add <strong>Students</strong></li>
+                  <li><strong>Enroll</strong> students into classes</li>
+                  <li>Enter marks via <strong>Results</strong></li>
+                  <li>Generate the <strong>Mastersheet</strong></li>
+                </ol>
               </div>
               {user?.role === 'school_admin' && (
                 <div className="overview-card">
-                  <h3>School Admin Dashboard</h3>
-                  <p>You can manage your school's students, staff, and classes from this portal.</p>
+                  <h3>My School</h3>
                   <div className="overview-actions">
-                    <button className="btn-secondary" onClick={() => setActiveTab('school')}>School profile</button>
+                    <button className="btn-secondary" onClick={() => setActiveTab('school')}>
+                      School Profile
+                    </button>
                   </div>
                 </div>
               )}
@@ -133,34 +124,34 @@ function DashboardPage() {
         {activeTab === 'students' && (
           <div className="tab-content">
             {showStudentForm && (
-              <StudentForm 
+              <StudentForm
                 student={editingStudent}
-                onSubmit={handleStudentFormSubmit}
-                onCancel={handleStudentFormCancel}
+                onSubmit={handleStudentSubmit}
+                onCancel={handleStudentCancel}
               />
             )}
-
             <div className="section-header">
               <h2>Student Management</h2>
               <button className="btn-primary" onClick={handleAddStudent}>
                 + Add Student
               </button>
             </div>
-
-            <StudentList 
+            <StudentList
               onEdit={handleEditStudent}
               refreshTrigger={studentRefreshTrigger}
             />
           </div>
         )}
 
-        {activeTab === 'staff' && <StaffPage />}
-
-        {activeTab === 'classes' && <ClassPage />}
-
+        {activeTab === 'staff'       && <StaffPage />}
+        {activeTab === 'classes'     && <ClassPage />}
+        {activeTab === 'subjects'    && <SubjectsPage />}
+        {activeTab === 'enrollment'  && <EnrollmentPage />}
+        {activeTab === 'results'     && <ResultsPage />}
+        {activeTab === 'mastersheet' && <MastersheetPage />}
         {activeTab === 'schools' && user?.role === 'super_admin' && <SuperAdminSchools />}
+        {activeTab === 'school'  && user?.role !== 'super_admin' && <SchoolProfile />}
 
-        {activeTab === 'school' && user?.role !== 'super_admin' && <SchoolProfile />}
       </main>
     </div>
   );
