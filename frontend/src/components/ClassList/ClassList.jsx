@@ -23,10 +23,10 @@ function ClassList({ onEdit, refreshTrigger }) {
     const result = await apiCall(endpoint);
 
     if (result.success) {
-      setClasses(result.data.classes);
-      setTotalPages(result.data.pagination.total_pages);
+      setClasses(result.classes);
+      setTotalPages(result.pagination.total_pages);
     } else {
-      setError(result.data?.message || result.error || 'Failed to load classes');
+      setError(result.message || result.error || 'Failed to load classes');
     }
 
     setLoading(false);
@@ -49,7 +49,7 @@ function ClassList({ onEdit, refreshTrigger }) {
     if (result.success) {
       setClasses(classes.filter(item => item.id !== id));
     } else {
-      setError(result.data?.message || result.error || 'Failed to delete class');
+      setError(result.message || result.error || 'Failed to delete class');
     }
 
     setDeleting(null);

@@ -57,7 +57,7 @@ function StaffForm({ staff, onSubmit, onCancel }) {
     });
 
     if (result.success) {
-      onSubmit(result.data || {});
+      onSubmit(result || {});
       setFormData({
         staff_number: '',
         first_name: '',
@@ -69,7 +69,7 @@ function StaffForm({ staff, onSubmit, onCancel }) {
         status: 'active'
       });
     } else {
-      setErrors(result.data?.errors || [result.data?.message || result.error || 'Failed to save staff member']);
+      setErrors(result.errors || [result.message || result.error || 'Failed to save staff member']);
     }
 
     setLoading(false);

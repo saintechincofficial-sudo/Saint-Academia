@@ -55,7 +55,7 @@ function StudentForm({ student, onSubmit, onCancel }) {
         date_of_birth: ''
       });
     } else {
-      setErrors(result.data?.errors || [result.data?.message || result.error || 'Failed to save student']);
+      setErrors(result.errors || [result.message || result.error || 'Failed to save student']);
     }
 
     setLoading(false);

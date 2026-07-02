@@ -23,10 +23,10 @@ function StaffList({ onEdit, refreshTrigger }) {
     const result = await apiCall(endpoint);
 
     if (result.success) {
-      setStaff(result.data.staff);
-      setTotalPages(result.data.pagination.total_pages);
+      setStaff(result.staff);
+      setTotalPages(result.pagination.total_pages);
     } else {
-      setError(result.data?.message || result.error || 'Failed to load staff');
+      setError(result.message || result.error || 'Failed to load staff');
     }
 
     setLoading(false);
@@ -53,7 +53,7 @@ function StaffList({ onEdit, refreshTrigger }) {
     if (result.success) {
       setStaff(staff.filter(item => item.id !== id));
     } else {
-      setError(result.data?.message || result.error || 'Failed to delete staff member');
+      setError(result.message || result.error || 'Failed to delete staff member');
     }
 
     setDeleting(null);

@@ -23,10 +23,10 @@ function StudentList({ onEdit, refreshTrigger }) {
     const result = await apiCall(endpoint);
     
     if (result.success) {
-      setStudents(result.data.students);
-      setTotalPages(result.data.pagination.total_pages);
+      setStudents(result.students);
+      setTotalPages(result.pagination.total_pages);
     } else {
-      setError(result.data?.message || result.error || 'Failed to load students');
+      setError(result.message || result.error || 'Failed to load students');
     }
     
     setLoading(false);
@@ -53,7 +53,7 @@ function StudentList({ onEdit, refreshTrigger }) {
     if (result.success) {
       setStudents(students.filter(s => s.id !== id));
     } else {
-      setError(result.data?.message || 'Failed to delete student');
+      setError(result.message || 'Failed to delete student');
     }
     
     setDeleting(null);

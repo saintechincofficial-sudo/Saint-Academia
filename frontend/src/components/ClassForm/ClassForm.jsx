@@ -46,7 +46,7 @@ function ClassForm({ classItem, onSubmit, onCancel }) {
       onSubmit();
       setFormData({ name: '', stream: '', level_name: '', room: '' });
     } else {
-      setErrors(result.data?.errors || [result.data?.message || result.error || 'Failed to save class']);
+      setErrors(result.errors || [result.message || result.error || 'Failed to save class']);
     }
 
     setLoading(false);
