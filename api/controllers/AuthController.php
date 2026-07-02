@@ -4,32 +4,40 @@ class AuthController {
     
     public static function login(): array {
         $body = json_decode(file_get_contents('php://input'), true) ?: [];
-        $email = trim($body['email'] ?? '');
+        $identifier = trim($body['identifier'] ?? $body['email'] ?? '');
         $password = trim($body['password'] ?? '');
         
-        if (empty($email) || empty($password)) {
+        if (empty($identifier) || empty($password)) {
             return [
                 'success' => false,
-                'message' => 'Email and password are required'
-            ];
-        }
-        
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return [
-                'success' => false,
-                'message' => 'Invalid email format'
+                'message' => 'Username/User ID and password are required'
             ];
         }
         
         try {
             $pdo = getDatabaseConnection();
             
-            $stmt = $pdo->prepare('
-                SELECT id, school_id, email, password_hash, role, is_active 
-                FROM users 
-                WHERE email = ? AND is_active = TRUE
-            ');
-            $stmt->execute([$email]);
+            if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+                $stmt = $pdo->prepare('
+                    SELECT id, school_id, email, password_hash, role, is_active 
+                    FROM users 
+                    WHERE email = ? AND is_active = TRUE
+                ');
+                $stmt->execute([$identifier]);
+            } elseif (ctype_digit($identifier)) {
+                $stmt = $pdo->prepare('
+                    SELECT id, school_id, email, password_hash, role, is_active 
+                    FROM users 
+                    WHERE (id = ? OR reference_id = ?) AND is_active = TRUE
+                ');
+                $stmt->execute([$identifier, $identifier]);
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Invalid login identifier'
+                ];
+            }
+            
             $user = $stmt->fetch();
             
             if (!$user || !password_verify($password, $user['password_hash'])) {

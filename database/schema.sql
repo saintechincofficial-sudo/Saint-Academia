@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS schools (
   address TEXT,
   phone VARCHAR(20),
   email VARCHAR(150),
+  is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

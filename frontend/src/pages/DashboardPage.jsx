@@ -5,6 +5,8 @@ import StudentForm from '../components/StudentForm/StudentForm';
 import StaffPage from './StaffPage';
 import ClassPage from './ClassPage';
 import DashboardSummary from '../components/DashboardSummary/DashboardSummary';
+import SuperAdminSchools from '../components/SuperAdminSchools/SuperAdminSchools';
+import SchoolProfile from '../components/SchoolProfile/SchoolProfile';
 import './DashboardPage.css';
 
 function DashboardPage() {
@@ -80,6 +82,21 @@ function DashboardPage() {
         >
           🏫 Classes
         </button>
+        {user?.role === 'super_admin' ? (
+          <button
+            className={`nav-btn ${activeTab === 'schools' ? 'active' : ''}`}
+            onClick={() => setActiveTab('schools')}
+          >
+            🏢 Schools
+          </button>
+        ) : (
+          <button
+            className={`nav-btn ${activeTab === 'school' ? 'active' : ''}`}
+            onClick={() => setActiveTab('school')}
+          >
+            🏫 My School
+          </button>
+        )}
       </nav>
 
       <main className="dashboard-main">
@@ -100,6 +117,15 @@ function DashboardPage() {
                 <h3>Classes overview</h3>
                 <p>Classes are the next module to expand. This space will eventually contain class lists, levels, streams, and academic planning.</p>
               </div>
+              {user?.role === 'school_admin' && (
+                <div className="overview-card">
+                  <h3>School Admin Dashboard</h3>
+                  <p>You can manage your school's students, staff, and classes from this portal.</p>
+                  <div className="overview-actions">
+                    <button className="btn-secondary" onClick={() => setActiveTab('school')}>School profile</button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -131,6 +157,10 @@ function DashboardPage() {
         {activeTab === 'staff' && <StaffPage />}
 
         {activeTab === 'classes' && <ClassPage />}
+
+        {activeTab === 'schools' && user?.role === 'super_admin' && <SuperAdminSchools />}
+
+        {activeTab === 'school' && user?.role !== 'super_admin' && <SchoolProfile />}
       </main>
     </div>
   );

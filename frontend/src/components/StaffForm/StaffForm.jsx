@@ -57,7 +57,7 @@ function StaffForm({ staff, onSubmit, onCancel }) {
     });
 
     if (result.success) {
-      onSubmit();
+      onSubmit(result.data || {});
       setFormData({
         staff_number: '',
         first_name: '',

@@ -6,21 +6,31 @@ function StaffPage() {
   const [showStaffForm, setShowStaffForm] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
   const [staffRefreshTrigger, setStaffRefreshTrigger] = useState(0);
+  const [staffMessage, setStaffMessage] = useState('');
 
   const handleAddStaff = () => {
     setEditingStaff(null);
     setShowStaffForm(true);
+    setStaffMessage('');
   };
 
   const handleEditStaff = (staff) => {
     setEditingStaff(staff);
     setShowStaffForm(true);
+    setStaffMessage('');
   };
 
-  const handleStaffFormSubmit = () => {
+  const handleStaffFormSubmit = (result = {}) => {
     setShowStaffForm(false);
     setEditingStaff(null);
     setStaffRefreshTrigger(prev => prev + 1);
+    if (result.login_id) {
+      setStaffMessage(`Staff created successfully. Default login ID/password: ${result.login_id}`);
+    } else if (result.message) {
+      setStaffMessage(result.message);
+    } else {
+      setStaffMessage('Staff saved successfully.');
+    }
   };
 
   const handleStaffFormCancel = () => {
@@ -44,6 +54,8 @@ function StaffPage() {
           + Add Staff
         </button>
       </div>
+
+      {staffMessage && <p className="success-message">{staffMessage}</p>}
 
       <StaffList
         onEdit={handleEditStaff}

@@ -53,14 +53,36 @@ class JWTHandler {
         }
     }
     
+    public static function getAuthorizationHeader() {
+        if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
+            return trim($_SERVER['HTTP_AUTHORIZATION']);
+        }
+
+        if (!empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            return trim($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+        }
+
+        if (function_exists('apache_request_headers')) {
+            $headers = apache_request_headers();
+            if (!empty($headers['Authorization'])) {
+                return trim($headers['Authorization']);
+            }
+            if (!empty($headers['authorization'])) {
+                return trim($headers['authorization']);
+            }
+        }
+
+        return null;
+    }
+
     public static function fromHeader() {
-        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        $header = self::getAuthorizationHeader() ?? '';
         if (preg_match('/Bearer\s+(.+)/', $header, $matches)) {
             return $matches[1];
         }
         return null;
     }
-    
+
     public static function getCurrentUser() {
         $token = self::fromHeader();
         if (!$token) return null;

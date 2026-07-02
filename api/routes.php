@@ -18,6 +18,7 @@ require_once __DIR__ . '/controllers/FeeController.php';
 require_once __DIR__ . '/controllers/ReportController.php';
 require_once __DIR__ . '/controllers/SubjectController.php';
 require_once __DIR__ . '/controllers/ResultController.php';
+require_once __DIR__ . '/controllers/SchoolController.php';
 
 CORSMiddleware::handle();
 
@@ -38,6 +39,46 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($resource === 'health') {
     Response::json(HealthController::index());
+    return;
+}
+
+if ($resource === 'schools' && isset($segments[1]) && $segments[1] === 'me') {
+    if ($method === 'GET') {
+        Response::json(SchoolController::current());
+        return;
+    }
+    if ($method === 'PUT') {
+        Response::json(SchoolController::update());
+        return;
+    }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
+    return;
+}
+
+if ($resource === 'schools' && isset($segments[1]) && is_numeric($segments[1])) {
+    $_GET['id'] = $segments[1];
+    if ($method === 'GET') {
+        Response::json(SchoolController::show());
+        return;
+    }
+    if ($method === 'PUT') {
+        Response::json(SchoolController::update());
+        return;
+    }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
+    return;
+}
+
+if ($resource === 'schools') {
+    if ($method === 'GET') {
+        Response::json(SchoolController::index());
+        return;
+    }
+    if ($method === 'POST') {
+        Response::json(SchoolController::create());
+        return;
+    }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
     return;
 }
 

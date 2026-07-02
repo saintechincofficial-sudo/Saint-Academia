@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../utils/TenantContext.php';
 
 class ClassModel {
     private $pdo;
@@ -10,6 +11,12 @@ class ClassModel {
 
     private function getSchoolId(): int {
         if ($this->school_id > 0) {
+            return $this->school_id;
+        }
+
+        $tenantSchoolId = TenantContext::getSchoolId(null);
+        if ($tenantSchoolId && $tenantSchoolId > 0) {
+            $this->school_id = $tenantSchoolId;
             return $this->school_id;
         }
 

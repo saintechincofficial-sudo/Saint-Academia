@@ -26,13 +26,13 @@ function LoginPage() {
           {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="identifier">Email or User ID</label>
             <input
-              id="email"
-              type="email"
+              id="identifier"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@saintacademia.com"
+              placeholder="admin@saintacademia.com or 4"
               disabled={loading}
               required
             />
@@ -63,7 +63,8 @@ function LoginPage() {
         <p className="demo-text">
           Demo Credentials:<br/>
           Email: admin@saintacademia.com<br/>
-          Password: password123
+          Password: password123<br/>
+          Staff default login: User ID / User ID
         </p>
       </div>
     </div>
