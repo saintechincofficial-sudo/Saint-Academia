@@ -1,135 +1,103 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/ClassModel.php';
 
 class ClassController {
     public static function index(): array {
         try {
-            $pdo = getDatabaseConnection();
-            $stmt = $pdo->query(
-                'SELECT c.id, c.name, c.stream, c.room, cl.name as level_name FROM classes c LEFT JOIN class_levels cl ON cl.id = c.level_id ORDER BY c.id DESC LIMIT 50'
-            );
+            $model = new ClassModel();
+            $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+            $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 25;
+            $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+            if (!empty($search)) {
+                $classes = $model->search($search, $page, $limit);
+                $total = $model->searchCount($search);
+            } else {
+                $classes = $model->getAll($page, $limit);
+                $total = $model->getCount();
+            }
+
+            $pages = $limit > 0 ? (int) ceil($total / $limit) : 1;
 
             return [
                 'success' => true,
-                'classes' => $stmt->fetchAll(),
+                'classes' => $classes,
+                'pagination' => [
+                    'current_page' => $page,
+                    'total_pages' => $pages,
+                    'total_items' => $total,
+                    'per_page' => $limit,
+                ],
             ];
-        } catch (Throwable $e) {
-            return [
-                'success' => false,
-                'message' => 'Unable to load classes',
-                'error' => $e->getMessage(),
-            ];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to fetch classes', 'error' => $e->getMessage()];
+        }
+    }
+
+    public static function show(): array {
+        try {
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if (!$id) {
+                return ['success' => false, 'message' => 'Class ID is required'];
+            }
+
+            $model = new ClassModel();
+            $class = $model->getById($id);
+            if (!$class) {
+                return ['success' => false, 'message' => 'Class not found'];
+            }
+
+            return ['success' => true, 'class' => $class];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to fetch class', 'error' => $e->getMessage()];
         }
     }
 
     public static function create(): array {
-        $rawBody = file_get_contents('php://input');
-        $body = [];
-
-        if (!empty($rawBody)) {
-            $decodedJson = json_decode($rawBody, true);
-            if (is_array($decodedJson)) {
-                $body = $decodedJson;
-            } else {
-                parse_str($rawBody, $body);
-            }
-        }
-
-        if ($body === []) {
-            $body = $_POST;
-        }
-
-        $name = trim((string) ($body['name'] ?? ''));
-        $stream = trim((string) ($body['stream'] ?? ''));
-        $room = trim((string) ($body['room'] ?? ''));
-
-        if ($name === '') {
-            return ['success' => false, 'message' => 'Class name is required'];
-        }
-
         try {
-            $pdo = getDatabaseConnection();
-            $schoolId = self::ensureSchool();
-            $levelId = self::ensureLevel($pdo, $schoolId);
-            $academicYearId = self::ensureAcademicYear($pdo, $schoolId);
+            $body = json_decode(file_get_contents('php://input'), true) ?: [];
+            if (empty($body)) {
+                $body = $_POST ?? [];
+            }
 
-            $stmt = $pdo->prepare(
-                'INSERT INTO classes (school_id, level_id, name, stream, academic_year_id, room)
-                 VALUES (:school_id, :level_id, :name, :stream, :academic_year_id, :room)'
-            );
-
-            $stmt->execute([
-                ':school_id' => $schoolId,
-                ':level_id' => $levelId,
-                ':name' => $name,
-                ':stream' => $stream,
-                ':academic_year_id' => $academicYearId,
-                ':room' => $room,
-            ]);
-
-            return [
-                'success' => true,
-                'message' => 'Class created successfully',
-                'class' => [
-                    'id' => (int) $pdo->lastInsertId(),
-                    'name' => $name,
-                    'stream' => $stream,
-                    'room' => $room,
-                ],
-            ];
-        } catch (Throwable $e) {
-            return [
-                'success' => false,
-                'message' => 'Unable to create class',
-                'error' => $e->getMessage(),
-            ];
+            $model = new ClassModel();
+            return $model->create($body);
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to create class', 'error' => $e->getMessage()];
         }
     }
 
-    private static function ensureSchool(): int {
-        $pdo = getDatabaseConnection();
-        $stmt = $pdo->query('SELECT id FROM schools ORDER BY id LIMIT 1');
-        $school = $stmt->fetch();
+    public static function update(): array {
+        try {
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if (!$id) {
+                return ['success' => false, 'message' => 'Class ID is required'];
+            }
 
-        if ($school) {
-            return (int) $school['id'];
+            $body = json_decode(file_get_contents('php://input'), true) ?: [];
+            if (empty($body)) {
+                $body = $_POST ?? [];
+            }
+
+            $model = new ClassModel();
+            return $model->update($id, $body);
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to update class', 'error' => $e->getMessage()];
         }
-
-        $pdo->prepare('INSERT INTO schools (name, email) VALUES (?, ?)')->execute([
-            'SaintAcademia',
-            'info@saintacademia.com',
-        ]);
-
-        return (int) $pdo->lastInsertId();
     }
 
-    private static function ensureLevel(PDO $pdo, int $schoolId): int {
-        $stmt = $pdo->prepare('SELECT id FROM class_levels WHERE school_id = ? LIMIT 1');
-        $stmt->execute([$schoolId]);
-        $level = $stmt->fetch();
+    public static function delete(): array {
+        try {
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if (!$id) {
+                return ['success' => false, 'message' => 'Class ID is required'];
+            }
 
-        if ($level) {
-            return (int) $level['id'];
+            $model = new ClassModel();
+            return $model->delete($id);
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to delete class', 'error' => $e->getMessage()];
         }
-
-        $stmt = $pdo->prepare('INSERT INTO class_levels (school_id, name, name_fr, order_no) VALUES (?, ?, ?, ?)');
-        $stmt->execute([$schoolId, 'Secondary', 'Secondaire', 1]);
-
-        return (int) $pdo->lastInsertId();
-    }
-
-    private static function ensureAcademicYear(PDO $pdo, int $schoolId): int {
-        $stmt = $pdo->prepare('SELECT id FROM academic_years WHERE school_id = ? ORDER BY id DESC LIMIT 1');
-        $stmt->execute([$schoolId]);
-        $year = $stmt->fetch();
-
-        if ($year) {
-            return (int) $year['id'];
-        }
-
-        $stmt = $pdo->prepare('INSERT INTO academic_years (school_id, label, start_date, end_date, is_current) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$schoolId, '2026/2027', date('Y-m-d'), date('Y-m-d', strtotime('+1 year')), 1]);
-
-        return (int) $pdo->lastInsertId();
     }
 }

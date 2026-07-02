@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS staff (
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
   role VARCHAR(50),
+  department VARCHAR(100),
   phone VARCHAR(20),
   email VARCHAR(150),
   status VARCHAR(20) DEFAULT 'active',

@@ -2,14 +2,17 @@ import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import StudentList from '../components/StudentList/StudentList';
 import StudentForm from '../components/StudentForm/StudentForm';
+import StaffPage from './StaffPage';
+import ClassPage from './ClassPage';
+import DashboardSummary from '../components/DashboardSummary/DashboardSummary';
 import './DashboardPage.css';
 
 function DashboardPage() {
   const { user, logout } = useAuth();
-  const [showForm, setShowForm] = useState(false);
+  const [showStudentForm, setShowStudentForm] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [activeTab, setActiveTab] = useState('students');
+  const [studentRefreshTrigger, setStudentRefreshTrigger] = useState(0);
+  const [activeTab, setActiveTab] = useState('overview');
 
   const handleLogout = () => {
     logout();
@@ -18,22 +21,22 @@ function DashboardPage() {
 
   const handleAddStudent = () => {
     setEditingStudent(null);
-    setShowForm(true);
+    setShowStudentForm(true);
   };
 
   const handleEditStudent = (student) => {
     setEditingStudent(student);
-    setShowForm(true);
+    setShowStudentForm(true);
   };
 
-  const handleFormSubmit = () => {
-    setShowForm(false);
+  const handleStudentFormSubmit = () => {
+    setShowStudentForm(false);
     setEditingStudent(null);
-    setRefreshTrigger(prev => prev + 1);
+    setStudentRefreshTrigger(prev => prev + 1);
   };
 
-  const handleFormCancel = () => {
-    setShowForm(false);
+  const handleStudentFormCancel = () => {
+    setShowStudentForm(false);
     setEditingStudent(null);
   };
 
@@ -53,6 +56,12 @@ function DashboardPage() {
       </header>
 
       <nav className="dashboard-nav">
+        <button
+          className={`nav-btn ${activeTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('overview')}
+        >
+          🏠 Overview
+        </button>
         <button 
           className={`nav-btn ${activeTab === 'students' ? 'active' : ''}`}
           onClick={() => setActiveTab('students')}
@@ -74,13 +83,34 @@ function DashboardPage() {
       </nav>
 
       <main className="dashboard-main">
+        {activeTab === 'overview' && (
+          <div className="tab-content">
+            <DashboardSummary />
+            <div className="overview-card-grid">
+              <div className="overview-card">
+                <h3>Quick access</h3>
+                <p>Jump directly into student, staff, and class management.</p>
+                <div className="overview-actions">
+                  <button className="btn-secondary" onClick={() => setActiveTab('students')}>Students</button>
+                  <button className="btn-secondary" onClick={() => setActiveTab('staff')}>Staff</button>
+                  <button className="btn-secondary" onClick={() => setActiveTab('classes')}>Classes</button>
+                </div>
+              </div>
+              <div className="overview-card">
+                <h3>Classes overview</h3>
+                <p>Classes are the next module to expand. This space will eventually contain class lists, levels, streams, and academic planning.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'students' && (
           <div className="tab-content">
-            {showForm && (
+            {showStudentForm && (
               <StudentForm 
                 student={editingStudent}
-                onSubmit={handleFormSubmit}
-                onCancel={handleFormCancel}
+                onSubmit={handleStudentFormSubmit}
+                onCancel={handleStudentFormCancel}
               />
             )}
 
@@ -93,28 +123,14 @@ function DashboardPage() {
 
             <StudentList 
               onEdit={handleEditStudent}
-              refreshTrigger={refreshTrigger}
+              refreshTrigger={studentRefreshTrigger}
             />
           </div>
         )}
 
-        {activeTab === 'staff' && (
-          <div className="tab-content">
-            <div className="coming-soon">
-              <h2>Staff Management</h2>
-              <p>Coming soon...</p>
-            </div>
-          </div>
-        )}
+        {activeTab === 'staff' && <StaffPage />}
 
-        {activeTab === 'classes' && (
-          <div className="tab-content">
-            <div className="coming-soon">
-              <h2>Class Management</h2>
-              <p>Coming soon...</p>
-            </div>
-          </div>
-        )}
+        {activeTab === 'classes' && <ClassPage />}
       </main>
     </div>
   );

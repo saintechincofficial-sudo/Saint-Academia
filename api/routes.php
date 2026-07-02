@@ -8,6 +8,8 @@ require_once __DIR__ . '/middleware/CORSMiddleware.php';
 require_once __DIR__ . '/models/Student.php';
 require_once __DIR__ . '/controllers/HealthController.php';
 require_once __DIR__ . '/controllers/AuthController.php';
+require_once __DIR__ . '/models/Staff.php';
+require_once __DIR__ . '/models/ClassModel.php';
 require_once __DIR__ . '/controllers/StudentController.php';
 require_once __DIR__ . '/controllers/StaffController.php';
 require_once __DIR__ . '/controllers/ClassController.php';
@@ -80,6 +82,24 @@ if ($resource === 'students') {
 }
 
 if ($resource === 'staff') {
+    if (isset($segments[1]) && is_numeric($segments[1])) {
+        $_GET['id'] = $segments[1];
+        if ($method === 'GET') {
+            Response::json(StaffController::show());
+            return;
+        }
+        if ($method === 'PUT') {
+            Response::json(StaffController::update());
+            return;
+        }
+        if ($method === 'DELETE') {
+            Response::json(StaffController::delete());
+            return;
+        }
+        Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
+        return;
+    }
+
     if ($method === 'GET') {
         Response::json(StaffController::index());
         return;
@@ -93,6 +113,24 @@ if ($resource === 'staff') {
 }
 
 if ($resource === 'classes') {
+    if (isset($segments[1]) && is_numeric($segments[1])) {
+        $_GET['id'] = $segments[1];
+        if ($method === 'GET') {
+            Response::json(ClassController::show());
+            return;
+        }
+        if ($method === 'PUT') {
+            Response::json(ClassController::update());
+            return;
+        }
+        if ($method === 'DELETE') {
+            Response::json(ClassController::delete());
+            return;
+        }
+        Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
+        return;
+    }
+
     if ($method === 'GET') {
         Response::json(ClassController::index());
         return;

@@ -1,110 +1,103 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/Staff.php';
 
 class StaffController {
     public static function index(): array {
         try {
-            $pdo = getDatabaseConnection();
-            $stmt = $pdo->query(
-                'SELECT id, staff_number, first_name, last_name, role, email, phone, status FROM staff ORDER BY id DESC LIMIT 50'
-            );
+            $model = new Staff();
+            $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+            $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 25;
+            $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+            if (!empty($search)) {
+                $staff = $model->search($search, $page, $limit);
+                $total = $model->searchCount($search);
+            } else {
+                $staff = $model->getAll($page, $limit);
+                $total = $model->getCount();
+            }
+
+            $pages = $limit > 0 ? (int) ceil($total / $limit) : 1;
 
             return [
                 'success' => true,
-                'staff' => $stmt->fetchAll(),
+                'staff' => $staff,
+                'pagination' => [
+                    'current_page' => $page,
+                    'total_pages' => $pages,
+                    'total_items' => $total,
+                    'per_page' => $limit,
+                ],
             ];
-        } catch (Throwable $e) {
-            return [
-                'success' => false,
-                'message' => 'Unable to load staff',
-                'error' => $e->getMessage(),
-            ];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to fetch staff', 'error' => $e->getMessage()];
+        }
+    }
+
+    public static function show(): array {
+        try {
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if (!$id) {
+                return ['success' => false, 'message' => 'Staff ID is required'];
+            }
+
+            $model = new Staff();
+            $staff = $model->getById($id);
+            if (!$staff) {
+                return ['success' => false, 'message' => 'Staff member not found'];
+            }
+
+            return ['success' => true, 'staff' => $staff];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to fetch staff member', 'error' => $e->getMessage()];
         }
     }
 
     public static function create(): array {
-        $rawBody = file_get_contents('php://input');
-        $body = [];
-
-        if (!empty($rawBody)) {
-            $decodedJson = json_decode($rawBody, true);
-            if (is_array($decodedJson)) {
-                $body = $decodedJson;
-            } else {
-                parse_str($rawBody, $body);
-            }
-        }
-
-        if ($body === []) {
-            $body = $_POST;
-        }
-
-        $staffNumber = trim((string) ($body['staff_number'] ?? ''));
-        $firstName = trim((string) ($body['first_name'] ?? ''));
-        $lastName = trim((string) ($body['last_name'] ?? ''));
-        $role = trim((string) ($body['role'] ?? 'Teacher'));
-
-        if ($staffNumber === '' || $firstName === '' || $lastName === '') {
-            return ['success' => false, 'message' => 'Staff number, first name and last name are required'];
-        }
-
         try {
-            $pdo = getDatabaseConnection();
-            $schoolId = self::ensureSchool();
+            $body = json_decode(file_get_contents('php://input'), true) ?: [];
+            if (empty($body)) {
+                $body = $_POST ?? [];
+            }
 
-            $stmt = $pdo->prepare(
-                'INSERT INTO staff (school_id, staff_number, first_name, last_name, role, email, phone, status, created_at)
-                 VALUES (:school_id, :staff_number, :first_name, :last_name, :role, :email, :phone, :status, NOW())'
-            );
-
-            $stmt->execute([
-                ':school_id' => $schoolId,
-                ':staff_number' => $staffNumber,
-                ':first_name' => $firstName,
-                ':last_name' => $lastName,
-                ':role' => $role,
-                ':email' => trim((string) ($body['email'] ?? '')),
-                ':phone' => trim((string) ($body['phone'] ?? '')),
-                ':status' => 'active',
-            ]);
-
-            return [
-                'success' => true,
-                'message' => 'Staff created successfully',
-                'staff' => [
-                    'id' => (int) $pdo->lastInsertId(),
-                    'staff_number' => $staffNumber,
-                    'first_name' => $firstName,
-                    'last_name' => $lastName,
-                    'role' => $role,
-                    'email' => trim((string) ($body['email'] ?? '')),
-                    'phone' => trim((string) ($body['phone'] ?? '')),
-                    'status' => 'active',
-                ],
-            ];
-        } catch (Throwable $e) {
-            return [
-                'success' => false,
-                'message' => 'Unable to create staff',
-                'error' => $e->getMessage(),
-            ];
+            $model = new Staff();
+            return $model->create($body);
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to create staff member', 'error' => $e->getMessage()];
         }
     }
 
-    private static function ensureSchool(): int {
-        $pdo = getDatabaseConnection();
-        $stmt = $pdo->query('SELECT id FROM schools ORDER BY id LIMIT 1');
-        $school = $stmt->fetch();
+    public static function update(): array {
+        try {
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if (!$id) {
+                return ['success' => false, 'message' => 'Staff ID is required'];
+            }
 
-        if ($school) {
-            return (int) $school['id'];
+            $body = json_decode(file_get_contents('php://input'), true) ?: [];
+            if (empty($body)) {
+                $body = $_POST ?? [];
+            }
+
+            $model = new Staff();
+            return $model->update($id, $body);
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to update staff member', 'error' => $e->getMessage()];
         }
+    }
 
-        $pdo->prepare('INSERT INTO schools (name, email) VALUES (?, ?)')->execute([
-            'SaintAcademia',
-            'info@saintacademia.com',
-        ]);
+    public static function delete(): array {
+        try {
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if (!$id) {
+                return ['success' => false, 'message' => 'Staff ID is required'];
+            }
 
-        return (int) $pdo->lastInsertId();
+            $model = new Staff();
+            return $model->delete($id);
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to delete staff member', 'error' => $e->getMessage()];
+        }
     }
 }

@@ -5,18 +5,19 @@ class StudentController {
     public static function index(): array {
         try {
             $model = new Student();
-            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 25;
+            $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+            $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 25;
             $search = isset($_GET['search']) ? trim($_GET['search']) : '';
             
             if (!empty($search)) {
                 $students = $model->search($search, $page, $limit);
+                $total = $model->searchCount($search);
             } else {
                 $students = $model->getAll($page, $limit);
+                $total = $model->getCount();
             }
             
-            $total = $model->getCount();
-            $pages = ceil($total / $limit);
+            $pages = $limit > 0 ? (int) ceil($total / $limit) : 1;
             
             return [
                 'success' => true,

@@ -26,7 +26,7 @@ function StudentList({ onEdit, refreshTrigger }) {
       setStudents(result.data.students);
       setTotalPages(result.data.pagination.total_pages);
     } else {
-      setError(result.data?.message || 'Failed to load students');
+      setError(result.data?.message || result.error || 'Failed to load students');
     }
     
     setLoading(false);
@@ -34,7 +34,7 @@ function StudentList({ onEdit, refreshTrigger }) {
 
   useEffect(() => {
     loadStudents();
-  }, [page, refreshTrigger]);
+  }, [page, refreshTrigger, search]);
 
   useEffect(() => {
     setPage(1);

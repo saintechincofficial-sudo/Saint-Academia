@@ -1,26 +1,39 @@
 import { useState, useEffect } from 'react';
 import { useApi } from '../../hooks/useApi';
-import './StudentForm.css';
+import './StaffForm.css';
 
-function StudentForm({ student, onSubmit, onCancel }) {
+const roles = ['Teacher', 'Administrator', 'Counselor', 'Support', 'Accountant', 'Librarian'];
+const departments = ['Administration', 'Academics', 'Finance', 'Support', 'Admissions', 'Exams'];
+
+function StaffForm({ staff, onSubmit, onCancel }) {
   const { apiCall } = useApi();
   const [formData, setFormData] = useState({
-    student_number: '',
+    staff_number: '',
     first_name: '',
     last_name: '',
     email: '',
     phone: '',
-    gender: '',
-    date_of_birth: ''
+    role: 'Teacher',
+    department: '',
+    status: 'active'
   });
   const [errors, setErrors] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (student) {
-      setFormData(student);
+    if (staff) {
+      setFormData({
+        staff_number: staff.staff_number || '',
+        first_name: staff.first_name || '',
+        last_name: staff.last_name || '',
+        email: staff.email || '',
+        phone: staff.phone || '',
+        role: staff.role || 'Teacher',
+        department: staff.department || '',
+        status: staff.status || 'active'
+      });
     }
-  }, [student]);
+  }, [staff]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,9 +48,9 @@ function StudentForm({ student, onSubmit, onCancel }) {
     setErrors([]);
     setLoading(true);
 
-    const method = student ? 'PUT' : 'POST';
-    const endpoint = student ? `/students/${student.id}` : '/students';
-    
+    const method = staff ? 'PUT' : 'POST';
+    const endpoint = staff ? `/staff/${staff.id}` : '/staff';
+
     const result = await apiCall(endpoint, {
       method,
       body: JSON.stringify(formData)
@@ -46,25 +59,26 @@ function StudentForm({ student, onSubmit, onCancel }) {
     if (result.success) {
       onSubmit();
       setFormData({
-        student_number: '',
+        staff_number: '',
         first_name: '',
         last_name: '',
         email: '',
         phone: '',
-        gender: '',
-        date_of_birth: ''
+        role: 'Teacher',
+        department: '',
+        status: 'active'
       });
     } else {
-      setErrors(result.data?.errors || [result.data?.message || result.error || 'Failed to save student']);
+      setErrors(result.data?.errors || [result.data?.message || result.error || 'Failed to save staff member']);
     }
 
     setLoading(false);
   };
 
   return (
-    <div className="student-form-container">
+    <div className="staff-form-container">
       <div className="form-header">
-        <h2>{student ? 'Edit Student' : 'Add New Student'}</h2>
+        <h2>{staff ? 'Edit Staff Member' : 'Add New Staff Member'}</h2>
         <button className="btn-close" onClick={onCancel}>✕</button>
       </div>
 
@@ -79,25 +93,24 @@ function StudentForm({ student, onSubmit, onCancel }) {
       <form onSubmit={handleSubmit}>
         <div className="form-row">
           <div className="form-group">
-            <label>Student Number *</label>
+            <label>Staff Number *</label>
             <input
               type="text"
-              name="student_number"
-              value={formData.student_number}
+              name="staff_number"
+              value={formData.staff_number}
               onChange={handleChange}
-              placeholder="e.g., S1003"
+              placeholder="e.g., ST1001"
               required
-              disabled={!!student}
+              disabled={!!staff}
             />
           </div>
 
           <div className="form-group">
-            <label>Gender</label>
-            <select name="gender" value={formData.gender} onChange={handleChange}>
-              <option value="">Select gender</option>
-              <option value="M">Male</option>
-              <option value="F">Female</option>
-              <option value="O">Other</option>
+            <label>Role *</label>
+            <select name="role" value={formData.role} onChange={handleChange} required>
+              {roles.map(roleOption => (
+                <option key={roleOption} value={roleOption}>{roleOption}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -130,6 +143,26 @@ function StudentForm({ student, onSubmit, onCancel }) {
 
         <div className="form-row">
           <div className="form-group">
+            <label>Department</label>
+            <select name="department" value={formData.department} onChange={handleChange}>
+              <option value="">Select department</option>
+              {departments.map(dept => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Status</label>
+            <select name="status" value={formData.status} onChange={handleChange}>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
             <label>Email</label>
             <input
               type="email"
@@ -152,32 +185,11 @@ function StudentForm({ student, onSubmit, onCancel }) {
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group full-width">
-            <label>Date of Birth</label>
-            <input
-              type="date"
-              name="date_of_birth"
-              value={formData.date_of_birth}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
-
         <div className="form-actions">
-          <button 
-            type="submit" 
-            className="btn-submit"
-            disabled={loading}
-          >
-            {loading ? 'Saving...' : (student ? 'Update Student' : 'Create Student')}
+          <button type="submit" className="btn-submit" disabled={loading}>
+            {loading ? 'Saving...' : (staff ? 'Update Staff' : 'Create Staff')}
           </button>
-          <button 
-            type="button" 
-            className="btn-cancel"
-            onClick={onCancel}
-            disabled={loading}
-          >
+          <button type="button" className="btn-cancel" onClick={onCancel} disabled={loading}>
             Cancel
           </button>
         </div>
@@ -186,4 +198,4 @@ function StudentForm({ student, onSubmit, onCancel }) {
   );
 }
 
-export default StudentForm;
+export default StaffForm;

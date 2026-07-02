@@ -54,6 +54,15 @@ class Student {
         
         return $stmt->fetchAll();
     }
+
+    public function searchCount($query) {
+        $search = "%$query%";
+        $sql = "SELECT COUNT(*) as total FROM students WHERE school_id = ? AND (student_number LIKE ? OR first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$this->school_id, $search, $search, $search, $search]);
+        $result = $stmt->fetch();
+        return $result['total'] ?? 0;
+    }
     
     public function create($data) {
         $errors = $this->validate($data);
