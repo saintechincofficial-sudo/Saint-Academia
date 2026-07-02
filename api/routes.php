@@ -263,3 +263,52 @@ if ($resource === 'reports') {
 }
 
 Response::json(['success' => false, 'message' => 'Route not found'], 404);
+
+require_once __DIR__ . '/controllers/EnrollmentController.php';
+require_once __DIR__ . '/controllers/MastersheetController.php';
+
+if ($resource === 'enrollments') {
+    if (isset($segments[1]) && $segments[1] === 'unenrolled') {
+        Response::json(EnrollmentController::unenrolledStudents());
+        return;
+    }
+    if (isset($segments[1]) && is_numeric($segments[1]) && $method === 'DELETE') {
+        $_GET['id'] = $segments[1];
+        Response::json(EnrollmentController::unenroll());
+        return;
+    }
+    if ($method === 'GET')  { Response::json(EnrollmentController::index());  return; }
+    if ($method === 'POST') { Response::json(EnrollmentController::enroll()); return; }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
+    return;
+}
+
+if ($resource === 'mastersheet') {
+    if ($method === 'GET') { Response::json(MastersheetController::generate()); return; }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
+    return;
+}
+
+if ($resource === 'bulk-results') {
+    if ($method === 'POST') { Response::json(MastersheetController::bulkResults()); return; }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
+    return;
+}
+
+if ($resource === 'terms') {
+    if ($method === 'GET') {
+        Auth::check();
+        $pdo      = getDatabaseConnection();
+        $schoolId = SchoolHelper::resolveSchoolId($pdo);
+        $yearId   = SchoolHelper::resolveAcademicYearId($pdo, $schoolId);
+        $stmt = $pdo->prepare(
+            'SELECT id, term_number, label, is_current
+             FROM terms WHERE academic_year_id = ? ORDER BY term_number'
+        );
+        $stmt->execute([$yearId]);
+        Response::json(['success' => true, 'terms' => $stmt->fetchAll()]);
+        return;
+    }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
+    return;
+}
