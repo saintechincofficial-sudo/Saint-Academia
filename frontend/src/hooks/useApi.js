@@ -8,10 +8,10 @@ export function useApi() {
 
   const apiCall = useCallback(async (endpoint, options = {}) => {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
-    
+
     const headers = {
       'Content-Type': 'application/json',
-      ...options.headers
+      ...options.headers,
     };
 
     if (token) {
@@ -19,11 +19,7 @@ export function useApi() {
     }
 
     try {
-      const response = await fetch(url, {
-        ...options,
-        headers
-      });
-
+      const response = await fetch(url, { ...options, headers });
       const data = await response.json();
 
       if (response.status === 401) {
@@ -31,18 +27,23 @@ export function useApi() {
         window.location.href = '/';
       }
 
-      return {
-        success: response.ok,
-        status: response.status,
-        data
-      };
+      return { success: response.ok, status: response.status, ...data };
     } catch (error) {
-      return {
-        success: false,
-        error: error.message
-      };
+      return { success: false, message: error.message };
     }
   }, [token, logout]);
 
-  return { apiCall };
+  const get  = useCallback((endpoint) =>
+    apiCall(endpoint, { method: 'GET' }), [apiCall]);
+
+  const post = useCallback((endpoint, body) =>
+    apiCall(endpoint, { method: 'POST', body: JSON.stringify(body) }), [apiCall]);
+
+  const put  = useCallback((endpoint, body) =>
+    apiCall(endpoint, { method: 'PUT', body: JSON.stringify(body) }), [apiCall]);
+
+  const del  = useCallback((endpoint) =>
+    apiCall(endpoint, { method: 'DELETE' }), [apiCall]);
+
+  return { apiCall, get, post, put, del };
 }
