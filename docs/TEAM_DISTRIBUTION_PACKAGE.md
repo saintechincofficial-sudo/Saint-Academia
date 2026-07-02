@@ -1,6 +1,4 @@
 # Saint Academia - Team Distribution Package
-
-# Saint Academia - Team Distribution Package
 ## Complete Project Status & Documentation
 
 ---
