@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useAuth } from './useAuth';
 
-const API_BASE_URL = 'http://localhost/SaintAcademia/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost/SaintAcademia/api';
 
 export function useApi() {
   const { token, logout } = useAuth();
