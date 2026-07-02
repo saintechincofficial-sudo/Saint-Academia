@@ -35,7 +35,7 @@ class ClassModel {
                 LEFT JOIN class_levels cl ON cl.id = c.level_id
                 LEFT JOIN academic_years ay ON ay.id = c.academic_year_id
                 WHERE c.school_id = ?
-                ORDER BY c.created_at DESC, c.id DESC
+                ORDER BY c.id DESC
                 LIMIT $limit OFFSET $offset";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$schoolId]);
@@ -75,7 +75,7 @@ class ClassModel {
                 LEFT JOIN class_levels cl ON cl.id = c.level_id
                 LEFT JOIN academic_years ay ON ay.id = c.academic_year_id
                 WHERE c.school_id = ? AND (c.name LIKE ? OR c.stream LIKE ? OR c.room LIKE ? OR cl.name LIKE ?)
-                ORDER BY c.created_at DESC, c.id DESC
+                ORDER BY c.id DESC
                 LIMIT $limit OFFSET $offset";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([$schoolId, $search, $search, $search, $search]);
