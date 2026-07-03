@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
 import './MastersheetPage.css';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const VIEW_MODES = [
   { value: 'term1',  label: 'First Term  (Seq 1 & 2)' },
@@ -158,6 +160,25 @@ export default function MastersheetPage() {
   const [data,     setData]     = useState(null);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const downloadPdf = async () => {
+    const el = document.getElementById('ms-printable');
+    setPdfLoading(true);
+    try {
+      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: canvas.width > canvas.height ? 'landscape' : 'portrait', unit: 'mm', format: 'a3' });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = (canvas.height * pdfW) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+      const cn = (data?.class?.name || 'Form').replace(/\s+/g, '_');
+      const yr = (data?.academic_year?.label || '').replace('/', '-');
+      const vw = (data?.view_label || '').replace(/\s+/g, '_');
+      pdf.save(`Mastersheet_${cn}_${yr}_${vw}.pdf`);
+    } catch(e) { console.error(e); }
+    setPdfLoading(false);
+  };
 
   useEffect(() => {
     get('/classes').then(r => {
@@ -206,9 +227,12 @@ export default function MastersheetPage() {
       <div className="section-header no-print">
         <h2>📊 Mastersheet — Relevé de Notes</h2>
         {data && (
-          <button className="btn-primary" onClick={() => window.print()}>
-            🖨️ Print / PDF
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn-secondary" onClick={() => window.print()}>🖨️ Print</button>
+            <button className="btn-primary" onClick={downloadPdf} disabled={pdfLoading}>
+              {pdfLoading ? 'Generating PDF…' : '⬇️ Download PDF'}
+            </button>
+          </div>
         )}
       </div>
 
@@ -250,7 +274,7 @@ export default function MastersheetPage() {
       {loading && <p className="loading-text no-print">Calculating…</p>}
 
       {data && (
-        <div className="mastersheet-wrapper">
+        <div className="mastersheet-wrapper" id="ms-printable">
 
           {/* ── Header ── */}
           <div className="ms-header">
