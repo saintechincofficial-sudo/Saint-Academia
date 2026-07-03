@@ -5,9 +5,147 @@ import './MastersheetPage.css';
 const VIEW_MODES = [
   { value: 'term1',  label: 'First Term  (Seq 1 & 2)' },
   { value: 'term2',  label: 'Second Term (Seq 3 & 4)' },
-  { value: 'term3',  label: 'Third Term  (Seq 5 & 6)' },
-  { value: 'annual', label: 'Annual Results (All Terms)' },
+  { value: 'term3',  label: 'Third Term  (Seq 5 & 6) + Annual' },
+  { value: 'annual', label: 'Annual Results Only' },
 ];
+
+function MastersheetTable({ data, rows, stats, title }) {
+  if (!rows || rows.length === 0) return null;
+  return (
+    <div style={{ marginBottom: 32 }}>
+      {title && (
+        <div className="ms-section-title">{title}</div>
+      )}
+
+      {/* Stats bar */}
+      <div className="ms-stats">
+        <div className="stat-box">
+          <span className="stat-num">{stats?.sat_count ?? stats?.total_students}</span>
+          <span>Effectif</span>
+        </div>
+        <div className="stat-box pass">
+          <span className="stat-num">{stats?.pass_count}</span>
+          <span>Admis</span>
+        </div>
+        <div className="stat-box fail">
+          <span className="stat-num">{stats?.fail_count}</span>
+          <span>Refusés</span>
+        </div>
+        <div className="stat-box avg">
+          <span className="stat-num">{stats?.class_average ?? '—'}</span>
+          <span>Moy. Classe</span>
+        </div>
+        <div className="stat-box rate">
+          <span className="stat-num">{stats?.pass_rate}%</span>
+          <span>Taux Réussite</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-num">{stats?.highest_avg ?? '—'}</span>
+          <span>Moy. Max</span>
+        </div>
+        <div className="stat-box">
+          <span className="stat-num">{stats?.lowest_avg ?? '—'}</span>
+          <span>Moy. Min</span>
+        </div>
+      </div>
+
+      {/* Main table */}
+      <div className="ms-table-wrapper">
+        <table className="ms-table">
+          <thead>
+            <tr>
+              <th className="ms-num">#</th>
+              <th className="ms-name-col">Name / Nom</th>
+              {data.subjects?.map(s => (
+                <th key={s.id} className="ms-subject-header">
+                  {s.code || s.name}
+                  {s.name_fr ? ` / ${s.name_fr}` : ''}
+                </th>
+              ))}
+              <th className="ms-tm">TM</th>
+              <th className="ms-avg">AVG/20</th>
+              <th className="ms-rank">P</th>
+            </tr>
+            <tr className="ms-coef-row">
+              <th></th>
+              <th>Coefficients</th>
+              {data.subjects?.map(s => <th key={s.id}>{s.coefficient}</th>)}
+              <th>{data.total_coefficients}</th>
+              <th>/20</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, idx) => (
+              <tr key={row.student_id}
+                className={idx % 2 === 0 ? 'ms-row-even' : 'ms-row-odd'}>
+                <td className="ms-num">{idx + 1}</td>
+                <td className="ms-name-cell">
+                  <span className="ms-student-name">{row.last_name} {row.first_name}</span>
+                  <span className="ms-student-num">{row.student_number}</span>
+                </td>
+                {row.cells?.map((cell, ci) => (
+                  <td key={ci} className={
+                    cell.points === null ? 'cell-null' :
+                    cell.avg_score >= 10 ? 'cell-pass' : 'cell-fail'
+                  }>
+                    {cell.points !== null ? cell.points.toFixed(2) : '—'}
+                  </td>
+                ))}
+                <td className="ms-tm">{row.tm?.toFixed(2) ?? '—'}</td>
+                <td className={`ms-avg ${row.avg >= 10 ? 'avg-pass' : 'avg-fail'}`}>
+                  {row.avg?.toFixed(2) ?? '—'}
+                </td>
+                <td className="ms-rank">{row.rank}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="ms-footer-row">
+              <td colSpan="2">Moyenne de classe / Class Average</td>
+              {data.subjects?.map((s, i) => <td key={i}>—</td>)}
+              <td>—</td>
+              <td>{stats?.class_average?.toFixed(2) ?? '—'}</td>
+              <td>—</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {/* Analysis section */}
+      <div className="ms-analysis">
+        <table className="ms-analysis-table">
+          <tbody>
+            <tr>
+              <th>Effectif total</th>
+              <td>{stats?.total_students}</td>
+              <th>Admis (≥10/20)</th>
+              <td className="pass-cell">{stats?.pass_count}</td>
+              <th>Refusés (&lt;10/20)</th>
+              <td className="fail-cell">{stats?.fail_count}</td>
+            </tr>
+            <tr>
+              <th>Moy. de classe</th>
+              <td>{stats?.class_average?.toFixed(2) ?? '—'}</td>
+              <th>Moy. la plus haute</th>
+              <td>{stats?.highest_avg?.toFixed(2) ?? '—'}</td>
+              <th>Moy. la plus basse</th>
+              <td>{stats?.lowest_avg?.toFixed(2) ?? '—'}</td>
+            </tr>
+            <tr>
+              <th>Taux de réussite</th>
+              <td><strong>{stats?.pass_rate}%</strong></td>
+              <th>Distinction (≥16)</th>
+              <td>{rows.filter(r => r.avg >= 16).length}</td>
+              <th>Insuffisant (&lt;8)</th>
+              <td>{rows.filter(r => r.avg !== null && r.avg < 8).length}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 export default function MastersheetPage() {
   const { get } = useApi();
@@ -21,14 +159,11 @@ export default function MastersheetPage() {
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
 
-  // Load all classes once, extract unique years from them
   useEffect(() => {
     get('/classes').then(r => {
       if (!r.success) return;
       const allClasses = r.classes || [];
       setClasses(allClasses);
-
-      // Build unique year list from classes
       const seen = new Set();
       const uniqueYears = [];
       allClasses.forEach(c => {
@@ -42,12 +177,10 @@ export default function MastersheetPage() {
     });
   }, []);
 
-  // Filter classes by selected year
   const filteredClasses = yearId
     ? classes.filter(c => String(c.academic_year_id || c.year_id) === String(yearId))
     : [];
 
-  // Reset class when year changes
   const handleYearChange = (e) => {
     setYearId(e.target.value);
     setClassId('');
@@ -66,9 +199,7 @@ export default function MastersheetPage() {
     else setError(res.message);
   };
 
-  const selectedClass = classes.find(c => String(c.id) === String(classId));
-  const selectedYear  = years.find(y => String(y.id) === String(yearId));
-  const viewLabel     = VIEW_MODES.find(v => v.value === viewMode)?.label || viewMode;
+  const isT3 = viewMode === 'term3';
 
   return (
     <div className="tab-content">
@@ -76,47 +207,38 @@ export default function MastersheetPage() {
         <h2>📊 Mastersheet — Relevé de Notes</h2>
         {data && (
           <button className="btn-primary" onClick={() => window.print()}>
-            🖨️ Print / Export PDF
+            🖨️ Print / PDF
           </button>
         )}
       </div>
 
-      {/* ── Filter bar ── */}
       <div className="filter-bar no-print">
         <div className="form-group">
           <label>Academic Year</label>
           <select value={yearId} onChange={handleYearChange} className="select-input">
             <option value="">— Select year —</option>
-            {years.map(y => (
-              <option key={y.id} value={y.id}>{y.label}</option>
-            ))}
+            {years.map(y => <option key={y.id} value={y.id}>{y.label}</option>)}
           </select>
         </div>
-
         <div className="form-group">
           <label>Class</label>
           <select value={classId}
             onChange={e => { setClassId(e.target.value); setData(null); }}
-            className="select-input"
-            disabled={!yearId}>
+            className="select-input" disabled={!yearId}>
             <option value="">— Select class —</option>
             {filteredClasses.map(c => (
               <option key={c.id} value={c.id}>{c.name} {c.stream || ''}</option>
             ))}
           </select>
         </div>
-
         <div className="form-group">
           <label>View</label>
           <select value={viewMode}
             onChange={e => { setViewMode(e.target.value); setData(null); }}
             className="select-input">
-            {VIEW_MODES.map(v => (
-              <option key={v.value} value={v.value}>{v.label}</option>
-            ))}
+            {VIEW_MODES.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}
           </select>
         </div>
-
         <button className="btn-primary"
           onClick={generate}
           disabled={loading || !classId || !yearId}>
@@ -125,7 +247,7 @@ export default function MastersheetPage() {
       </div>
 
       {error   && <div className="error-banner no-print">{error}</div>}
-      {loading && <p className="loading-text no-print">Calculating mastersheet…</p>}
+      {loading && <p className="loading-text no-print">Calculating…</p>}
 
       {data && (
         <div className="mastersheet-wrapper">
@@ -134,10 +256,11 @@ export default function MastersheetPage() {
           <div className="ms-header">
             <div className="ms-school-info">
               <h2>{data.school?.name}</h2>
-              {data.school?.name_fr && <h2>{data.school.name_fr}</h2>}
-              {data.school?.address && <p>{data.school.address}</p>}
-              {data.school?.phone   && <p>Tel: {data.school.phone}</p>}
-              {data.school?.region  && <p>{data.school.region}</p>}
+              {data.school?.name_fr    && <h2>{data.school.name_fr}</h2>}
+              {data.school?.address    && <p>{data.school.address}</p>}
+              {data.school?.phone      && <p>Tel: {data.school.phone}</p>}
+              {data.school?.region     && <p>{data.school.region}</p>}
+              {data.school?.delegation && <p>{data.school.delegation}</p>}
             </div>
             <div className="ms-title-block">
               <h1>MASTERSHEET</h1>
@@ -148,100 +271,46 @@ export default function MastersheetPage() {
             </div>
             <div className="ms-meta-info">
               <p><strong>Class / Classe:</strong> {data.class?.name} {data.class?.stream || ''}</p>
-              <p><strong>Academic Year:</strong> {data.academic_year?.label}</p>
-              <p><strong>Period:</strong> {data.view_label}</p>
-              <p><strong>Total Students:</strong> {data.stats?.total_students}</p>
+              <p><strong>Academic Year / Année:</strong> {data.academic_year?.label}</p>
+              <p><strong>Period / Période:</strong> {data.view_label}</p>
+              <p><strong>Effectif:</strong> {data.stats?.total_students}</p>
             </div>
           </div>
 
-          {/* ── Stats bar ── */}
-          <div className="ms-stats">
-            <div className="stat-box">
-              <span className="stat-num">{data.stats?.total_students}</span>
-              <span>Effectif</span>
-            </div>
-            <div className="stat-box pass">
-              <span className="stat-num">{data.stats?.pass_count}</span>
-              <span>Admis</span>
-            </div>
-            <div className="stat-box fail">
-              <span className="stat-num">{data.stats?.fail_count}</span>
-              <span>Refusés</span>
-            </div>
-            <div className="stat-box avg">
-              <span className="stat-num">{data.stats?.class_average ?? '—'}</span>
-              <span>Moy. Classe</span>
-            </div>
-            <div className="stat-box rate">
-              <span className="stat-num">{data.stats?.pass_rate}%</span>
-              <span>Taux Réussite</span>
-            </div>
-          </div>
+          {/* ── Term table ── */}
+          <MastersheetTable
+            data={data}
+            rows={data.rows}
+            stats={data.stats}
+            title={isT3 ? '── Third Term Results / Résultats du 3ème Trimestre ──' : null}
+          />
 
-          {/* ── Table ── */}
-          <div className="ms-table-wrapper">
-            <table className="ms-table">
-              <thead>
-                <tr>
-                  <th className="ms-num">#</th>
-                  <th className="ms-name-col">Name / Nom</th>
-                  {data.subjects?.map(s => (
-                    <th key={s.id} className="ms-subject-header">
-                      {s.code || s.name}
-                      {s.name_fr ? ` / ${s.name_fr}` : ''}
-                    </th>
-                  ))}
-                  <th className="ms-tm">TM</th>
-                  <th className="ms-avg">AVG/20</th>
-                  <th className="ms-rank">P</th>
-                </tr>
-                <tr className="ms-coef-row">
-                  <th></th>
-                  <th>Coefficients</th>
-                  {data.subjects?.map(s => <th key={s.id}>{s.coefficient}</th>)}
-                  <th>{data.total_coefficients}</th>
-                  <th>/20</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.rows?.map((row, idx) => (
-                  <tr key={row.student_id}
-                    className={idx % 2 === 0 ? 'ms-row-even' : 'ms-row-odd'}>
-                    <td className="ms-num">{idx + 1}</td>
-                    <td className="ms-name-cell">
-                      <span className="ms-student-name">
-                        {row.last_name} {row.first_name}
-                      </span>
-                      <span className="ms-student-num">{row.student_number}</span>
-                    </td>
-                    {row.cells?.map((cell, ci) => (
-                      <td key={ci} className={
-                        cell.points === null ? 'cell-null' :
-                        cell.avg_score >= 10 ? 'cell-pass' : 'cell-fail'
-                      }>
-                        {cell.points !== null ? cell.points.toFixed(2) : '—'}
-                      </td>
-                    ))}
-                    <td className="ms-tm">{row.tm?.toFixed(2) ?? '—'}</td>
-                    <td className={`ms-avg ${row.avg >= 10 ? 'avg-pass' : 'avg-fail'}`}>
-                      {row.avg?.toFixed(2) ?? '—'}
-                    </td>
-                    <td className="ms-rank">{row.rank}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="ms-footer-row">
-                  <td colSpan="2">Moyenne de classe / Class Average</td>
-                  {data.subjects?.map((s, i) => <td key={i}>—</td>)}
-                  <td>—</td>
-                  <td>{data.stats?.class_average?.toFixed(2) ?? '—'}</td>
-                  <td>—</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+          {/* ── Annual table (only for Term 3 view) ── */}
+          {isT3 && data.annual_rows && (
+            <>
+              <div className="ms-page-break" />
+              <div className="ms-header" style={{ marginTop: 16 }}>
+                <div className="ms-school-info">
+                  <h2>{data.school?.name}</h2>
+                  {data.school?.name_fr && <h2>{data.school.name_fr}</h2>}
+                </div>
+                <div className="ms-title-block">
+                  <h1>ANNUAL MASTERSHEET</h1>
+                  <h2>RELEVÉ DE NOTES ANNUEL</h2>
+                </div>
+                <div className="ms-meta-info">
+                  <p><strong>Class:</strong> {data.class?.name}</p>
+                  <p><strong>Year:</strong> {data.academic_year?.label}</p>
+                </div>
+              </div>
+              <MastersheetTable
+                data={data}
+                rows={data.annual_rows}
+                stats={data.annual_stats}
+                title="── Annual Results / Résultats Annuels (All Terms) ──"
+              />
+            </>
+          )}
 
           {/* ── Signature block ── */}
           <div className="ms-signature-block">

@@ -61,3 +61,13 @@
   body { margin: 0; }
   @page { size: A3 landscape; margin: 10mm; }
 }
+
+.ms-section-title  { background:#1B2A4A; color:#fff; font-size:12px; font-weight:bold; text-align:center; padding:6px 10px; margin:16px 0 8px; border-radius:4px; }
+.ms-analysis       { margin:12px 0 20px; }
+.ms-analysis-table { width:100%; border-collapse:collapse; font-size:11px; }
+.ms-analysis-table th { background:#EBF1F8; color:#1B2A4A; padding:6px 10px; text-align:left; border:1px solid #ccc; font-weight:600; width:20%; }
+.ms-analysis-table td { padding:6px 10px; border:1px solid #ccc; font-weight:bold; font-size:13px; width:13%; }
+.ms-analysis-table .pass-cell { color:#2E9E4E; }
+.ms-analysis-table .fail-cell { color:#c0392b; }
+.ms-page-break { page-break-before: always; border-top: 2px dashed #ccc; margin: 24px 0; }
+@media print { .ms-page-break { border: none; } }
