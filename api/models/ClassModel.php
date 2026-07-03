@@ -30,7 +30,7 @@ class ClassModel {
         $limit = (int) $limit;
         $offset = (int) $offset;
 
-        $sql = "SELECT c.id, c.name, c.stream, c.room, cl.name as level_name, ay.label as academic_year
+        $sql = "SELECT c.id, c.name, c.stream, c.room, cl.name as level_name, c.academic_year_id, ay.id as year_id, ay.label as academic_year
                 FROM classes c
                 LEFT JOIN class_levels cl ON cl.id = c.level_id
                 LEFT JOIN academic_years ay ON ay.id = c.academic_year_id
@@ -44,7 +44,7 @@ class ClassModel {
 
     public function getById($id) {
         $schoolId = $this->getSchoolId();
-        $sql = "SELECT c.id, c.name, c.stream, c.room, cl.name as level_name, ay.label as academic_year
+        $sql = "SELECT c.id, c.name, c.stream, c.room, cl.name as level_name, c.academic_year_id, ay.id as year_id, ay.label as academic_year
                 FROM classes c
                 LEFT JOIN class_levels cl ON cl.id = c.level_id
                 LEFT JOIN academic_years ay ON ay.id = c.academic_year_id
@@ -70,7 +70,7 @@ class ClassModel {
         $offset = (int) $offset;
         $search = "%$query%";
 
-        $sql = "SELECT c.id, c.name, c.stream, c.room, cl.name as level_name, ay.label as academic_year
+        $sql = "SELECT c.id, c.name, c.stream, c.room, cl.name as level_name, c.academic_year_id, ay.id as year_id, ay.label as academic_year
                 FROM classes c
                 LEFT JOIN class_levels cl ON cl.id = c.level_id
                 LEFT JOIN academic_years ay ON ay.id = c.academic_year_id

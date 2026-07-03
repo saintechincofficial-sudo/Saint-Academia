@@ -164,3 +164,12 @@
   margin-bottom: 20px;
   border-left: 4px solid #c00;
 }
+
+.student-filter-bar  { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; background:#f8f9fa; padding:14px 16px; border-radius:8px; margin-bottom:12px; border:1px solid #e0e0e0; }
+.filter-group        { display:flex; flex-direction:column; gap:4px; }
+.filter-group label  { font-size:12px; font-weight:600; color:#555; }
+.filter-select       { padding:7px 10px; border:1px solid #ccc; border-radius:6px; font-size:13px; min-width:160px; }
+.filter-search input { padding:7px 10px; border:1px solid #ccc; border-radius:6px; font-size:13px; min-width:200px; }
+.filter-clear        { padding:7px 12px; background:none; border:1px solid #ccc; border-radius:6px; cursor:pointer; font-size:13px; color:#c0392b; align-self:flex-end; }
+.filter-clear:hover  { background:#fdecea; }
+.student-count-bar   { font-size:13px; color:#555; margin-bottom:8px; padding:0 4px; }
