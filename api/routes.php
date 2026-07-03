@@ -262,7 +262,7 @@ if ($resource === 'reports') {
     return;
 }
 
-Response::json(['success' => false, 'message' => 'Route not found'], 404);
+
 
 require_once __DIR__ . '/controllers/EnrollmentController.php';
 require_once __DIR__ . '/controllers/MastersheetController.php';
@@ -326,3 +326,6 @@ if ($resource === 'promotions') {
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405);
     return;
 }
+
+// Catch-all - must be last
+Response::json(['success' => false, 'message' => 'Route not found'], 404);
