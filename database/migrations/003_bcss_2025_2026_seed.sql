@@ -17,15 +17,15 @@ VALUES (@school_id, '2025/2026', '2025-09-01', '2026-07-31', 1);
 SELECT @year_id := id FROM academic_years WHERE school_id = @school_id AND label = '2025/2026';
 
 -- ── Step 3: Terms ────────────────────────────────────────────
-INSERT IGNORE INTO terms (school_id, academic_year_id, term_number, label, start_date, end_date, is_current)
+INSERT IGNORE INTO terms (academic_year_id, term_number, label, start_date, end_date, is_current)
 VALUES
-  (@school_id, @year_id, 1, 'First Term',  '2025-09-08', '2025-12-19', 0),
-  (@school_id, @year_id, 2, 'Second Term', '2026-01-12', '2026-04-03', 0),
-  (@school_id, @year_id, 3, 'Third Term',  '2026-04-20', '2026-07-17', 1);
+  (@year_id, 1, 'First Term',  '2025-09-08', '2025-12-19', 0),
+  (@year_id, 2, 'Second Term', '2026-01-12', '2026-04-03', 0),
+  (@year_id, 3, 'Third Term',  '2026-04-20', '2026-07-17', 1);
 
-SELECT @term1_id := id FROM terms WHERE school_id=@school_id AND academic_year_id=@year_id AND term_number=1;
-SELECT @term2_id := id FROM terms WHERE school_id=@school_id AND academic_year_id=@year_id AND term_number=2;
-SELECT @term3_id := id FROM terms WHERE school_id=@school_id AND academic_year_id=@year_id AND term_number=3;
+SELECT @term1_id := id FROM terms WHERE academic_year_id=@year_id AND term_number=1;
+SELECT @term2_id := id FROM terms WHERE academic_year_id=@year_id AND term_number=2;
+SELECT @term3_id := id FROM terms WHERE academic_year_id=@year_id AND term_number=3;
 
 -- ── Step 4: Subjects (18 subjects, TC = 50) ─────────────────
 INSERT IGNORE INTO subjects (school_id, name, name_fr, code, coefficient) VALUES
