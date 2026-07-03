@@ -265,3 +265,13 @@
 .data-table th  { background: #1B2A4A; color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; }
 .data-table td  { padding: 9px 12px; border-bottom: 1px solid #e8e8e8; vertical-align: middle; }
 .data-table tr:hover td { background: #f0f4f8; }
+
+/* ── Promotion page ─────────────────────────────────── */
+.promo-summary-bar   { display:flex; justify-content:space-between; align-items:center; background:#EBF1F8; padding:12px 16px; border-radius:8px; margin-bottom:16px; flex-wrap:wrap; gap:12px; }
+.promo-info          { font-size:14px; color:#1B2A4A; }
+.promo-bulk-actions  { display:flex; gap:8px; align-items:center; }
+.promo-table-wrapper { overflow-x:auto; margin-bottom:16px; }
+.promo-save-bar      { display:flex; justify-content:space-between; align-items:center; background:#f8f9fa; padding:14px 16px; border-radius:8px; border:1px solid #e0e0e0; gap:16px; flex-wrap:wrap; }
+.promo-progress      { flex:1; min-width:200px; }
+.promo-progress-bar  { height:8px; background:#e0e0e0; border-radius:4px; margin-top:6px; overflow:hidden; }
+.promo-progress-fill { height:100%; background:#2E9E4E; border-radius:4px; transition:width 0.3s ease; }
