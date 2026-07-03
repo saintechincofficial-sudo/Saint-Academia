@@ -38,59 +38,81 @@ class MastersheetController
     }
 
     /**
-     * Generate the mastersheet exactly as the official MINESEC format.
-     * Each subject cell shows POINTS = (avg_mark / 20) * coefficient * 20
-     *                                = avg_mark * coefficient
-     * TM  = sum of all points
-     * TC  = sum of all coefficients
-     * AVG/20 = TM / TC
+     * Generate the mastersheet.
+     *
+     * GET params:
+     *   class_id        required
+     *   academic_year_id required
+     *   view_mode       required: term1 | term2 | term3 | annual
+     *
+     * view_mode maps to sequence ranges:
+     *   term1  → sequences 1,2
+     *   term2  → sequences 3,4
+     *   term3  → sequences 5,6
+     *   annual → all sequences (annual average)
      */
     public static function generate(): array
     {
         try {
             Auth::check();
 
-            $classId = isset($_GET['class_id']) ? (int) $_GET['class_id'] : 0;
-            $termId  = isset($_GET['term_id'])  ? (int) $_GET['term_id']  : 0;
+            $classId       = isset($_GET['class_id'])         ? (int)    $_GET['class_id']         : 0;
+            $academicYearId = isset($_GET['academic_year_id']) ? (int)    $_GET['academic_year_id'] : 0;
+            $viewMode      = isset($_GET['view_mode'])         ? trim($_GET['view_mode'])            : 'term1';
 
-            if ($classId <= 0 || $termId <= 0) {
-                return ['success' => false, 'message' => 'class_id and term_id are required'];
+            if ($classId <= 0)        return ['success' => false, 'message' => 'class_id is required'];
+            if ($academicYearId <= 0) return ['success' => false, 'message' => 'academic_year_id is required'];
+
+            $sequenceMap = [
+                'term1'  => [1, 2],
+                'term2'  => [3, 4],
+                'term3'  => [5, 6],
+                'annual' => [1, 2, 3, 4, 5, 6],
+            ];
+
+            if (!isset($sequenceMap[$viewMode])) {
+                return ['success' => false, 'message' => 'Invalid view_mode. Use term1, term2, term3 or annual'];
             }
 
-            $pdo            = getDatabaseConnection();
-            $schoolId       = SchoolHelper::resolveSchoolId($pdo);
-            $academicYearId = SchoolHelper::resolveAcademicYearId($pdo, $schoolId);
+            $sequences = $sequenceMap[$viewMode];
+            $seqIn     = implode(',', $sequences);
 
-            // Term info
-            $termStmt = $pdo->prepare(
-                'SELECT t.id, t.term_number, t.label, ay.label AS year_label
-                 FROM terms t
-                 JOIN academic_years ay ON ay.id = t.academic_year_id
-                 WHERE t.id = ?'
-            );
-            $termStmt->execute([$termId]);
-            $term = $termStmt->fetch();
-            if (!$term) return ['success' => false, 'message' => 'Term not found'];
+            $viewLabels = [
+                'term1'  => 'First Term',
+                'term2'  => 'Second Term',
+                'term3'  => 'Third Term',
+                'annual' => 'Annual Results',
+            ];
+
+            $pdo      = getDatabaseConnection();
+            $schoolId = SchoolHelper::resolveSchoolId($pdo);
+
+            // Academic year info
+            $yearStmt = $pdo->prepare('SELECT id, label FROM academic_years WHERE id = ? AND school_id = ?');
+            $yearStmt->execute([$academicYearId, $schoolId]);
+            $year = $yearStmt->fetch();
+            if (!$year) return ['success' => false, 'message' => 'Academic year not found'];
 
             // Class info
             $classStmt = $pdo->prepare(
                 'SELECT c.name, c.stream, cl.name AS level_name
                  FROM classes c
                  LEFT JOIN class_levels cl ON cl.id = c.level_id
-                 WHERE c.id = ? AND c.school_id = ?'
+                 WHERE c.id = ? AND c.school_id = ? AND c.academic_year_id = ?'
             );
-            $classStmt->execute([$classId, $schoolId]);
+            $classStmt->execute([$classId, $schoolId, $academicYearId]);
             $class = $classStmt->fetch();
-            if (!$class) return ['success' => false, 'message' => 'Class not found'];
+            if (!$class) return ['success' => false, 'message' => 'Class not found for this year'];
 
             // School info
             $schoolStmt = $pdo->prepare(
-                'SELECT name, name_fr, email, phone, address FROM schools WHERE id = ?'
+                'SELECT name, name_fr, email, phone, address, logo_path, letterhead_path, motto, region, delegation
+                 FROM schools WHERE id = ?'
             );
             $schoolStmt->execute([$schoolId]);
             $school = $schoolStmt->fetch();
 
-            // Enrolled students ordered by name
+            // Enrolled students
             $studentStmt = $pdo->prepare(
                 'SELECT s.id, s.first_name, s.last_name, s.student_number, s.gender
                  FROM student_enrollments se
@@ -103,43 +125,39 @@ class MastersheetController
             $students = $studentStmt->fetchAll();
 
             if (empty($students)) {
-                return ['success' => false,
-                    'message' => 'No students enrolled in this class. Go to Enrollment first.'];
+                return ['success' => false, 'message' => 'No students enrolled in this class'];
             }
 
             // Subjects with coefficients
             $subjectStmt = $pdo->prepare(
-                'SELECT id, name, name_fr, code, coefficient
-                 FROM subjects WHERE school_id = ? ORDER BY name'
+                'SELECT id, name, name_fr, code, coefficient FROM subjects WHERE school_id = ? ORDER BY name'
             );
             $subjectStmt->execute([$schoolId]);
             $subjects = $subjectStmt->fetchAll();
 
             if (empty($subjects)) {
-                return ['success' => false,
-                    'message' => 'No subjects configured. Go to Subjects first.'];
+                return ['success' => false, 'message' => 'No subjects configured'];
             }
 
-            // All results for this class + term
-            // Average multiple entries (sequences) per student/subject automatically
+            // Results for this class filtered by sequence range
             $resultStmt = $pdo->prepare(
-                'SELECT student_id, subject_id, AVG(score) AS avg_score, COUNT(*) AS entry_count
-                 FROM exam_results
-                 WHERE class_id = ? AND term_id = ? AND school_id = ?
-                 GROUP BY student_id, subject_id'
+                "SELECT er.student_id, er.subject_id, AVG(er.score) AS avg_score
+                 FROM exam_results er
+                 WHERE er.class_id = ?
+                   AND er.school_id = ?
+                   AND er.sequence IN ($seqIn)
+                 GROUP BY er.student_id, er.subject_id"
             );
-            $resultStmt->execute([$classId, $termId, $schoolId]);
-            $allResults = $resultStmt->fetchAll();
+            $resultStmt->execute([$classId, $schoolId]);
 
-            // Index: resultMap[student_id][subject_id] = avg_score
             $resultMap = [];
-            foreach ($allResults as $r) {
+            foreach ($resultStmt->fetchAll() as $r) {
                 $resultMap[$r['student_id']][$r['subject_id']] = round((float) $r['avg_score'], 2);
             }
 
             $totalCoefficients = array_sum(array_column($subjects, 'coefficient'));
 
-            // Build student rows
+            // Build rows
             $rows = [];
             foreach ($students as $student) {
                 $sid         = $student['id'];
@@ -150,19 +168,15 @@ class MastersheetController
                     $subId    = $subject['id'];
                     $coef     = (int) $subject['coefficient'];
                     $avgScore = $resultMap[$sid][$subId] ?? null;
+                    $points   = $avgScore !== null ? round($avgScore * $coef, 2) : null;
 
-                    // Points = avg_score * coefficient  (displayed in mastersheet cell)
-                    $points = $avgScore !== null ? round($avgScore * $coef, 2) : null;
-
-                    if ($points !== null) {
-                        $totalPoints += $points;
-                    }
+                    if ($points !== null) $totalPoints += $points;
 
                     $subjectCells[] = [
                         'subject_id'  => $subId,
                         'coefficient' => $coef,
-                        'avg_score'   => $avgScore,   // raw /20 (stored, not displayed)
-                        'points'      => $points,     // what mastersheet shows
+                        'avg_score'   => $avgScore,
+                        'points'      => $points,
                     ];
                 }
 
@@ -187,27 +201,20 @@ class MastersheetController
                 ];
             }
 
-            // Sort by AVG descending and assign rank
-            usort($rows, function ($a, $b) {
-                if ($a['avg'] === null && $b['avg'] === null) return 0;
-                if ($a['avg'] === null) return 1;
-                if ($b['avg'] === null) return -1;
-                return $b['avg'] <=> $a['avg'];
-            });
+            // Sort by AVG desc, assign rank
+            usort($rows, fn($a, $b) =>
+                $a['avg'] === null && $b['avg'] === null ? 0 :
+                ($a['avg'] === null ? 1 : ($b['avg'] === null ? -1 : $b['avg'] <=> $a['avg']))
+            );
 
-            $rank    = 1;
-            $prevAvg = null;
+            $rank = 1; $prevAvg = null;
             for ($i = 0; $i < count($rows); $i++) {
-                if ($rows[$i]['avg'] === null) {
-                    $rows[$i]['rank'] = '-';
-                    continue;
-                }
+                if ($rows[$i]['avg'] === null) { $rows[$i]['rank'] = '-'; continue; }
                 if ($rows[$i]['avg'] !== $prevAvg) $rank = $i + 1;
                 $rows[$i]['rank'] = $rank;
                 $prevAvg = $rows[$i]['avg'];
             }
 
-            // Class statistics
             $avgs      = array_values(array_filter(array_column($rows, 'avg'), fn($v) => $v !== null));
             $classAvg  = count($avgs) > 0 ? round(array_sum($avgs) / count($avgs), 2) : null;
             $passCount = count(array_filter($rows, fn($r) => $r['pass'] === true));
@@ -219,8 +226,11 @@ class MastersheetController
                     'school'             => $school,
                     'class'              => $class,
                     'class_id'           => $classId,
-                    'term'               => $term,
-                    'term_id'            => $termId,
+                    'academic_year'      => $year,
+                    'academic_year_id'   => $academicYearId,
+                    'view_mode'          => $viewMode,
+                    'view_label'         => $viewLabels[$viewMode],
+                    'sequences'          => $sequences,
                     'subjects'           => $subjects,
                     'total_coefficients' => $totalCoefficients,
                     'rows'               => $rows,
@@ -240,11 +250,6 @@ class MastersheetController
         }
     }
 
-    /**
-     * Save marks for a whole class at once.
-     * Works for both CBA (one SE mark) and Traditional (one or two sequence marks).
-     * The mastersheet always uses AVG of whatever is entered.
-     */
     public static function bulkResults(): array
     {
         try {
@@ -259,11 +264,7 @@ class MastersheetController
             $marks     = $body['marks'] ?? [];
 
             if ($classId <= 0 || $termId <= 0 || $subjectId <= 0) {
-                return ['success' => false,
-                    'message' => 'class_id, term_id and subject_id are required'];
-            }
-            if (empty($marks)) {
-                return ['success' => false, 'message' => 'marks array is required'];
+                return ['success' => false, 'message' => 'class_id, term_id and subject_id are required'];
             }
 
             $pdo      = getDatabaseConnection();
@@ -285,10 +286,8 @@ class MastersheetController
             foreach ($marks as $mark) {
                 $studentId = (int)   ($mark['student_id'] ?? 0);
                 $score     = isset($mark['score']) && $mark['score'] !== '' ? (float) $mark['score'] : null;
-
                 if ($studentId <= 0 || $score === null) continue;
                 if ($score < 0 || $score > 20) continue;
-
                 $stmt->execute([
                     $schoolId, $studentId, $subjectId, $classId, $termId,
                     $examType, $score, self::grade($score), self::remarks($score), $sequence,
@@ -296,14 +295,9 @@ class MastersheetController
                 $saved++;
             }
 
-            return [
-                'success' => true,
-                'message' => "{$saved} mark(s) saved successfully",
-                'saved'   => $saved,
-            ];
+            return ['success' => true, 'message' => "{$saved} mark(s) saved successfully", 'saved' => $saved];
         } catch (Throwable $e) {
-            return ['success' => false, 'message' => 'Unable to save marks',
-                    'error' => $e->getMessage()];
+            return ['success' => false, 'message' => 'Unable to save marks', 'error' => $e->getMessage()];
         }
     }
 }
