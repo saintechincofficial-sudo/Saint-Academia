@@ -79,16 +79,30 @@ class SchoolController
 
             if (!$schoolId) return ['success' => false, 'message' => 'School ID required'];
 
-            // Support both JSON body and multipart/form-data (for file uploads)
+            // Detect content type and parse body accordingly
             $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+            
             if (str_contains($contentType, 'application/json')) {
+                // JSON request
                 $body = json_decode(file_get_contents('php://input'), true) ?: [];
+            } elseif (str_contains($contentType, 'multipart/form-data')) {
+                // For PUT requests with multipart/form-data, PHP doesn't auto-populate $_POST
+                // We need to manually parse if $_POST is empty
+                if (empty($_POST)) {
+                    $body = self::parseMultipartFormData($contentType);
+                } else {
+                    $body = $_POST ?: [];
+                }
             } else {
+                // Fallback: try $_POST
                 $body = $_POST ?: [];
             }
 
+            // Ensure we have a name field
             $name = trim($body['name'] ?? '');
-            if (empty($name)) return ['success' => false, 'message' => 'School name is required'];
+            if (empty($name)) {
+                return ['success' => false, 'message' => 'School name is required'];
+            }
 
             $email = trim($body['email'] ?? '');
             if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -228,4 +242,76 @@ class SchoolController
             return ['success' => false, 'message' => 'Failed to create school', 'error' => $e->getMessage()];
         }
     }
+
+    /**
+     * Parse multipart/form-data from php://input stream
+     * This is needed for PUT requests where PHP doesn't auto-populate $_POST and $_FILES
+     */
+    private static function parseMultipartFormData(string $contentType): array
+    {
+        $result = [];
+        
+        // Extract boundary from Content-Type header
+        if (!preg_match('/boundary=([^;\s]+)/', $contentType, $matches)) {
+            return [];
+        }
+        
+        $boundary = trim($matches[1], '"');
+        $data = file_get_contents('php://input');
+        
+        // Split by boundary
+        $parts = explode('--' . $boundary, $data);
+        
+        foreach ($parts as $part) {
+            if (empty(trim($part)) || $part === '--') continue;
+            
+            // Split headers from content
+            if (!strpos($part, "\r\n\r\n")) continue;
+            
+            [$headerSection, $contentSection] = explode("\r\n\r\n", $part, 2);
+            $contentSection = rtrim($contentSection, "\r\n--");
+            
+            // Parse headers
+            if (!preg_match('/name="([^"]+)"/', $headerSection, $nameMatches)) {
+                continue;
+            }
+            
+            $fieldName = $nameMatches[1];
+            
+            // Check if this is a file upload (has filename parameter)
+            if (preg_match('/filename="([^"]*)"/', $headerSection, $filenameMatches)) {
+                // Extract MIME type from headers
+                $mimeType = 'application/octet-stream';
+                if (preg_match('/Content-Type:\s*([^\r\n]+)/', $headerSection, $mimeMatches)) {
+                    $mimeType = trim($mimeMatches[1]);
+                }
+                
+                // Store file data temporarily for processing
+                if (!isset($_FILES)) $_FILES = [];
+                $_FILES[$fieldName] = [
+                    'name' => $filenameMatches[1],
+                    'type' => $mimeType,
+                    'tmp_name' => self::saveMultipartFileTmp($contentSection),
+                    'error' => 0,
+                    'size' => strlen($contentSection)
+                ];
+            } else {
+                // Regular form field
+                $result[$fieldName] = $contentSection;
+            }
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Save multipart file content to a temporary location
+     */
+    private static function saveMultipartFileTmp(string $content): string
+    {
+        $tmpFile = sys_get_temp_dir() . '/' . uniqid('multipart_') . '.tmp';
+        file_put_contents($tmpFile, $content);
+        return $tmpFile;
+    }
 }
+

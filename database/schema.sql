@@ -9,6 +9,12 @@ CREATE TABLE IF NOT EXISTS schools (
   phone VARCHAR(20),
   email VARCHAR(150),
   is_active BOOLEAN DEFAULT TRUE,
+  logo_path VARCHAR(255),
+  letterhead_path VARCHAR(255),
+  motto VARCHAR(255),
+  po_box VARCHAR(100),
+  region VARCHAR(100),
+  delegation VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
