@@ -1,0 +1,44 @@
+.classlist-wrapper { font-family: Arial, sans-serif; font-size: 10px; color: #000; padding: 12px; background: #fff; }
+
+/* Header */
+.cl-header { display: grid; grid-template-columns: 1fr 120px 1fr; gap: 8px; margin-bottom: 10px; text-align: center; font-size: 9px; line-height: 1.4; }
+.cl-letterhead-left  { text-align: left; }
+.cl-letterhead-right { text-align: right; }
+.cl-logo  { width: 90px; height: 90px; object-fit: contain; }
+.cl-logo-placeholder { font-size: 48px; line-height: 90px; }
+.cl-logo-center { text-align: center; }
+
+/* Title */
+.cl-title { text-align: center; font-size: 13px; font-weight: bold; margin: 10px 0 8px; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 6px; }
+
+/* Table */
+.cl-table { width: 100%; border-collapse: collapse; font-size: 9px; }
+.cl-table th { background: #1B2A4A; color: #fff; padding: 5px 4px; text-align: center; border: 1px solid #000; font-size: 8px; font-weight: bold; }
+.cl-table td { border: 1px solid #999; padding: 4px 4px; vertical-align: top; }
+.cl-even { background: #f9f9f9; }
+.cl-odd  { background: #fff; }
+.cl-name     { min-width: 120px; }
+.cl-name-cell{ font-size: 9px; }
+.cl-sex      { width: 28px; }
+.cl-dob      { width: 64px; }
+.cl-pob      { width: 80px; }
+.cl-contact  { width: 80px; }
+.cl-status   { width: 36px; }
+.cl-parent   { width: 100px; }
+.cl-id       { width: 70px; }
+.cl-ev       { width: 28px; }
+.cl-ev-cell  { width: 28px; height: 20px; }
+.cl-center   { text-align: center; }
+
+/* Footer */
+.cl-footer { display: flex; justify-content: space-around; margin-top: 28px; }
+.cl-sig     { text-align: center; font-size: 10px; }
+.cl-sig-line { border-bottom: 1px solid #333; width: 180px; margin: 32px auto 6px; }
+
+/* Print */
+@media print {
+  .no-print { display: none !important; }
+  .classlist-wrapper { padding: 0; }
+  .cl-table { font-size: 8px; }
+  @page { size: A4 landscape; margin: 8mm; }
+}
