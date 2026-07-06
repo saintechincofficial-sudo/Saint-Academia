@@ -29,17 +29,24 @@ class JWTHandler {
         return $env;
     }
     
-    public static function generate($user_id, $email, $role, $school_id = 1) {
+    public static function generate($user_id, $email, $roles, $school_id = 1, $staff_id = null) {
         self::init();
+        // Normalize roles to array
+        if (is_string($roles)) {
+            $decoded = json_decode($roles, true);
+            $roles = is_array($decoded) ? $decoded : [$roles];
+        }
         $issuedAt = time();
         $expire = $issuedAt + (24 * 60 * 60);
         $payload = [
-            'iat' => $issuedAt,
-            'exp' => $expire,
-            'user_id' => $user_id,
-            'email' => $email,
-            'role' => $role,
-            'school_id' => $school_id
+            'iat'      => $issuedAt,
+            'exp'      => $expire,
+            'user_id'  => $user_id,
+            'email'    => $email,
+            'role'     => $roles[0],   // primary role (backward compat)
+            'roles'    => $roles,       // full array
+            'school_id'=> $school_id,
+            'staff_id' => $staff_id,
         ];
         return JWT::encode($payload, self::$secret, self::$algorithm);
     }

@@ -125,6 +125,10 @@ if ($resource === 'students') {
     return;
 }
 
+if ($resource === 'staff' && isset($segments[1]) && $segments[1] === 'login') {
+    if ($method === 'POST') { Response::json(StaffController::createLogin()); return; }
+    if ($method === 'GET')  { Response::json(StaffController::getLogin());    return; }
+}
 if ($resource === 'staff' && isset($segments[1]) && $segments[1] === 'photo') {
     if ($method === 'POST') { Response::json(StaffController::uploadPhoto()); return; }
 }

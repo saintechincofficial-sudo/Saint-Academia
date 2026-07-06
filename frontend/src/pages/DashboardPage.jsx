@@ -26,39 +26,39 @@ const NAV_GROUPS = [
   {
     label: 'Overview',
     items: [
-      { id:'overview',    label:'Dashboard',    Icon:LayoutDashboard, roles:['super_admin','school_admin'] },
+      { id:'overview',    label:'Dashboard',    Icon:LayoutDashboard, roles:['super_admin','school_admin','principal','vice_principal','dean','discipline_master','hod','class_master','teacher'] },
     ]
   },
   {
     label: 'People',
     items: [
-      { id:'students',    label:'Students',     Icon:Users,           roles:['super_admin','school_admin'] },
-      { id:'staff',       label:'Staff',        Icon:UserCheck,       roles:['super_admin','school_admin'] },
+      { id:'students',    label:'Students',     Icon:Users,           roles:['super_admin','school_admin','principal','vice_principal','dean','discipline_master','hod','class_master'] },
+      { id:'staff',       label:'Staff',        Icon:UserCheck,       roles:['super_admin','school_admin','principal'] },
     ]
   },
   {
     label: 'Academic',
     items: [
-      { id:'classes',     label:'Classes',      Icon:School,          roles:['super_admin','school_admin'] },
-      { id:'subjects',    label:'Subjects',     Icon:BookOpen,        roles:['school_admin'] },
-      { id:'enrollment',  label:'Enrollment',   Icon:ClipboardList,   roles:['school_admin'] },
-      { id:'results',     label:'Results',      Icon:PenLine,         roles:['school_admin'] },
-      { id:'workload',    label:'Workload',     Icon:Calendar,        roles:['school_admin'] },
+      { id:'classes',     label:'Classes',      Icon:School,          roles:['super_admin','school_admin','principal','vice_principal','dean','discipline_master','hod','class_master'] },
+      { id:'subjects',    label:'Subjects',     Icon:BookOpen,        roles:['super_admin','school_admin','principal'] },
+      { id:'enrollment',  label:'Enrollment',   Icon:ClipboardList,   roles:['super_admin','school_admin'] },
+      { id:'results',     label:'Results',      Icon:PenLine,         roles:['super_admin','school_admin','principal','vice_principal','dean','hod','class_master','teacher'] },
+      { id:'workload',    label:'Workload',     Icon:Calendar,        roles:['super_admin','school_admin','principal','vice_principal','dean','discipline_master','hod','class_master'] },
     ]
   },
   {
     label: 'Reports',
     items: [
-      { id:'mastersheet', label:'Mastersheet',  Icon:BarChart3,       roles:['school_admin'] },
-      { id:'reportcard',  label:'Report Cards', Icon:FileText,        roles:['school_admin'] },
-      { id:'classlist',   label:'Class List',   Icon:List,            roles:['school_admin'] },
-      { id:'promotion',   label:'Promotion',    Icon:GraduationCap,   roles:['school_admin'] },
+      { id:'mastersheet', label:'Mastersheet',  Icon:BarChart3,       roles:['super_admin','school_admin','principal'] },
+      { id:'reportcard',  label:'Report Cards', Icon:FileText,        roles:['super_admin','school_admin','principal'] },
+      { id:'classlist',   label:'Class List',   Icon:List,            roles:['super_admin','school_admin','principal','vice_principal','dean','discipline_master','hod','class_master'] },
+      { id:'promotion',   label:'Promotion',    Icon:GraduationCap,   roles:['super_admin','school_admin'] },
     ]
   },
   {
     label: 'Admin',
     items: [
-      { id:'school',      label:'My School',    Icon:Settings,        roles:['school_admin'] },
+      { id:'school',      label:'My School',    Icon:Settings,        roles:['super_admin','school_admin'] },
       { id:'schools',     label:'Schools',      Icon:Building2,       roles:['super_admin'] },
     ]
   },
@@ -79,9 +79,13 @@ export default function DashboardPage() {
   const handleStudentCancel = () => { setShowStudentForm(false); setEditingStudent(null); };
 
   const allItems = NAV_GROUPS.flatMap(g => g.items);
+  // user.roles is array e.g. ['teacher','principal'], user.role is primary (backward compat)
+  const userRoles = Array.isArray(user?.roles) ? user.roles : [user?.role].filter(Boolean);
+  const hasRole   = (required) => required.some(r => userRoles.includes(r));
+
   const visibleGroups = NAV_GROUPS.map(g => ({
     ...g,
-    items: g.items.filter(i => i.roles.includes(user?.role))
+    items: g.items.filter(i => hasRole(i.roles))
   })).filter(g => g.items.length > 0);
 
   const activeItem = allItems.find(i => i.id === activeTab);
