@@ -42,7 +42,17 @@ export default function ResultsPage() {
   const [error, setError]         = useState('');
 
   useEffect(() => {
-    get('/classes').then(r  => { if (r.success)  setClasses(r.classes   || []); });
+    get('/classes').then(r => {
+      if (!r.success) return;
+      const all = r.classes || [];
+      setClasses(all);
+      const seen = new Set(); const uy = [];
+      all.forEach(c => {
+        const id = c.academic_year_id || c.year_id;
+        if (id && !seen.has(id)) { seen.add(id); uy.push({ id, label: c.academic_year }); }
+      });
+      setYears(uy);
+    });
     get('/terms').then(r    => { if (r.success)  setTerms(r.terms       || []); });
     get('/subjects').then(r => { if (r.success)  setSubjects(r.subjects || []); });
   }, []);
