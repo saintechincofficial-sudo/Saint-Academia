@@ -172,8 +172,6 @@ class StaffController {
             return ['success' => false, 'message' => 'Upload failed', 'error' => $e->getMessage()];
         }
     }
-}
-
     public static function createLogin(): array
     {
         try {
@@ -269,3 +267,4 @@ class StaffController {
             return ['success' => false, 'message' => 'Failed to get login'];
         }
     }
+}
