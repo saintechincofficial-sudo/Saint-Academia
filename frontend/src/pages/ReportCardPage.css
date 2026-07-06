@@ -76,3 +76,7 @@
   .rc-wrapper { padding: 0; max-width: 100%; }
   @page { size: A4 portrait; margin: 8mm; }
 }
+
+/* Mark colors */
+.rc-fail { color: #c0392b !important; font-weight: bold; }
+.rc-pass { color: #1B2A4A; }

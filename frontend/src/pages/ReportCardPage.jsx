@@ -84,11 +84,11 @@ function RcCard({ rc, API_BASE, fmt }) {
                 <strong>{s.name}</strong>
                 {s.name_fr ? <span className="rc-fr"> / {s.name_fr}</span> : ''}
               </td>
-              <td className={'rc-num ' + (s.seq1 !== null && s.seq1 < 10 ? 'rc-fail' : 'rc-pass')}>{s.seq1 ?? ''}</td>
-              <td className={'rc-num ' + (s.seq2 !== null && s.seq2 < 10 ? 'rc-fail' : 'rc-pass')}>{s.seq2 ?? ''}</td>
-              <td className={'rc-num ' + (s.term_avg !== null && s.term_avg < 10 ? 'rc-fail' : 'rc-pass')}><strong>{s.term_avg ?? ''}</strong></td>
+              <td className={'rc-num ' + (s.seq1 !== null && parseFloat(s.seq1) < 10 ? 'rc-fail' : 'rc-pass')}>{s.seq1 ?? ''}</td>
+              <td className={'rc-num ' + (s.seq2 !== null && parseFloat(s.seq2) < 10 ? 'rc-fail' : 'rc-pass')}>{s.seq2 ?? ''}</td>
+              <td className={'rc-num ' + (s.term_avg !== null && parseFloat(s.term_avg) < 10 ? 'rc-fail' : 'rc-pass')}><strong>{s.term_avg ?? ''}</strong></td>
               <td className="rc-num">{s.coefficient}</td>
-              <td className={'rc-num rc-total-cell ' + (s.total !== null && s.total < s.coefficient*10 ? 'rc-fail' : '')}>{s.total ?? ''}</td>
+              <td className={'rc-num rc-total-cell ' + (s.total !== null && parseFloat(s.total) < parseFloat(s.coefficient)*10 ? 'rc-fail' : '')}>{s.total ?? ''}</td>
               <td className="rc-num">{s.position || ''}</td>
               <td className="rc-remark-cell">{s.remark}</td>
               <td className="rc-teacher-cell">{s.teacher || ''}</td>
