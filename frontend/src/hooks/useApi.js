@@ -9,23 +9,24 @@ export function useApi() {
   const apiCall = useCallback(async (endpoint, options = {}) => {
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
 
+    const isFormData = options.body instanceof FormData;
+
     const headers = {
-      'Content-Type': 'application/json',
-      ...options.headers,
+      // Don't set Content-Type for FormData — browser sets it with boundary
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(options.headers || {}),
     };
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    if (token) headers['Authorization'] = `Bearer ${token}`;
 
     try {
       const response = await fetch(url, { ...options, headers });
-      const data = await response.json();
 
-      if (response.status === 401) {
-        logout();
-        window.location.href = '/';
-      }
+      const text = await response.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch { data = { message: text }; }
+
+      if (response.status === 401) { logout(); window.location.href = '/'; }
 
       return { success: response.ok, status: response.status, ...data };
     } catch (error) {
@@ -33,17 +34,10 @@ export function useApi() {
     }
   }, [token, logout]);
 
-  const get  = useCallback((endpoint) =>
-    apiCall(endpoint, { method: 'GET' }), [apiCall]);
-
-  const post = useCallback((endpoint, body) =>
-    apiCall(endpoint, { method: 'POST', body: JSON.stringify(body) }), [apiCall]);
-
-  const put  = useCallback((endpoint, body) =>
-    apiCall(endpoint, { method: 'PUT', body: JSON.stringify(body) }), [apiCall]);
-
-  const del  = useCallback((endpoint) =>
-    apiCall(endpoint, { method: 'DELETE' }), [apiCall]);
+  const get  = useCallback((ep)       => apiCall(ep, { method:'GET' }),                         [apiCall]);
+  const post = useCallback((ep, body) => apiCall(ep, { method:'POST', body: JSON.stringify(body) }), [apiCall]);
+  const put  = useCallback((ep, body) => apiCall(ep, { method:'PUT',  body: JSON.stringify(body) }), [apiCall]);
+  const del  = useCallback((ep)       => apiCall(ep, { method:'DELETE' }),                       [apiCall]);
 
   return { apiCall, get, post, put, del };
 }
