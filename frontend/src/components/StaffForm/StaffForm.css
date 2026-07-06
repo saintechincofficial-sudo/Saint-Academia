@@ -87,8 +87,8 @@ form {
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #1E88C7;
+  box-shadow: 0 0 0 3px rgba(30, 136, 199, 0.1);
 }
 
 .form-group input:disabled {
@@ -114,7 +114,7 @@ form {
 }
 
 .btn-submit {
-  background: #667eea;
+  background: #1E88C7;
   color: white;
   flex: 1;
 }

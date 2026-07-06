@@ -3,7 +3,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1B2A4A 0%, #253d6b 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -54,7 +54,7 @@
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #1E88C7;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -66,7 +66,7 @@
 .login-button {
   width: 100%;
   padding: 12px;
-  background: #667eea;
+  background: #1E88C7;
   color: white;
   border: none;
   border-radius: 5px;
