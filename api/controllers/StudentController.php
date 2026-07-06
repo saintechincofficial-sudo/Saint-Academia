@@ -123,7 +123,6 @@ class StudentController {
             return ['success' => false, 'message' => 'Failed to delete student'];
         }
     }
-}
 
     public static function uploadPhoto(): array
     {
@@ -169,3 +168,4 @@ class StudentController {
             return ['success' => false, 'message' => 'Upload failed', 'error' => $e->getMessage()];
         }
     }
+}

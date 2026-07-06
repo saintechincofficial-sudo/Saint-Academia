@@ -127,7 +127,6 @@ class StaffController {
             return ['success' => false, 'message' => 'Failed to delete staff member', 'error' => $e->getMessage()];
         }
     }
-}
 
     public static function uploadPhoto(): array
     {
@@ -173,3 +172,4 @@ class StaffController {
             return ['success' => false, 'message' => 'Upload failed', 'error' => $e->getMessage()];
         }
     }
+}
