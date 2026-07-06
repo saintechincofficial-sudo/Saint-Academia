@@ -69,6 +69,9 @@ if ($resource === 'schools' && isset($segments[1]) && is_numeric($segments[1])) 
     return;
 }
 
+if ($resource === 'schools' && isset($segments[1]) && $segments[1] === 'toggle') {
+    if ($method === 'POST') { Response::json(SchoolController::toggleStatus()); return; }
+}
 if ($resource === 'schools') {
     if ($method === 'GET') {
         Response::json(SchoolController::index());

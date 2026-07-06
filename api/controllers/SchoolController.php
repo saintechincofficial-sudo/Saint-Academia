@@ -182,7 +182,14 @@ class SchoolController
                 return ['success' => false, 'message' => 'Forbidden'];
             }
             $pdo  = getDatabaseConnection();
-            $stmt = $pdo->prepare('SELECT ' . self::$SELECT . ' FROM schools ORDER BY id DESC');
+            $stmt = $pdo->prepare(
+                'SELECT s.id, s.name, s.name_fr, s.address, s.phone, s.email,
+                        s.logo_path, s.region, s.motto, s.is_active, s.created_at,
+                        (SELECT COUNT(*) FROM students WHERE school_id=s.id AND status="active") AS student_count,
+                        (SELECT COUNT(*) FROM staff WHERE school_id=s.id AND status="active") AS staff_count,
+                        (SELECT COUNT(*) FROM classes WHERE school_id=s.id) AS class_count
+                 FROM schools s ORDER BY s.is_active DESC, s.name ASC'
+            );
             $stmt->execute();
             return ['success' => true, 'schools' => $stmt->fetchAll()];
         } catch (Exception $e) {
@@ -225,6 +232,31 @@ class SchoolController
         } catch (Exception $e) {
             if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
             return ['success' => false, 'message' => 'Failed to create school', 'error' => $e->getMessage()];
+        }
+    }
+
+    public static function toggleStatus(): array
+    {
+        try {
+            Auth::check();
+            if (!TenantContext::isSuperAdmin()) {
+                return ['success' => false, 'message' => 'Forbidden'];
+            }
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if (!$id) return ['success' => false, 'message' => 'School ID required'];
+
+            $pdo  = getDatabaseConnection();
+            $stmt = $pdo->prepare('SELECT is_active FROM schools WHERE id = ?');
+            $stmt->execute([$id]);
+            $school = $stmt->fetch();
+            if (!$school) return ['success' => false, 'message' => 'School not found'];
+
+            $newStatus = $school['is_active'] ? 0 : 1;
+            $pdo->prepare('UPDATE schools SET is_active = ? WHERE id = ?')->execute([$newStatus, $id]);
+
+            return ['success' => true, 'message' => $newStatus ? 'School activated' : 'School deactivated', 'is_active' => $newStatus];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Failed to update status'];
         }
     }
 }
