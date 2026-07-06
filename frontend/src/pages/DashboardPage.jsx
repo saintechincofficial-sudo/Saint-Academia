@@ -13,6 +13,7 @@ import ResultsPage from './ResultsPage';
 import MastersheetPage from './MastersheetPage';
 import PromotionPage from './PromotionPage';
 import ClassListPage from './ClassListPage';
+import ReportCardPage from './ReportCardPage';
 import './DashboardPage.css';
 
 function DashboardPage() {
@@ -53,6 +54,7 @@ function DashboardPage() {
     { id: 'mastersheet', label: '📊 Mastersheet', roles: ['school_admin'] },
     { id: 'promotion',   label: '🎓 Promotion',   roles: ['school_admin'] },
     { id: 'classlist',   label: '📋 Class List',   roles: ['school_admin'] },
+    { id: 'reportcard',  label: '📄 Report Cards',  roles: ['school_admin'] },
     { id: 'schools',     label: '🏢 Schools',     roles: ['super_admin'] },
     { id: 'school',      label: '🏫 My School',   roles: ['school_admin'] },
   ];
@@ -155,6 +157,7 @@ function DashboardPage() {
         {activeTab === 'mastersheet' && <MastersheetPage />}
         {activeTab === 'promotion'  && <PromotionPage />}
         {activeTab === 'classlist'  && <ClassListPage />}
+        {activeTab === 'reportcard' && <ReportCardPage />}
         {activeTab === 'schools' && user?.role === 'super_admin' && <SuperAdminSchools />}
         {activeTab === 'school'  && user?.role !== 'super_admin' && <SchoolProfile />}
 

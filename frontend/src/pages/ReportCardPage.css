@@ -1,0 +1,78 @@
+.rc-wrapper { font-family: Arial, sans-serif; font-size: 10px; color: #000; background: #fff; padding: 10px; max-width: 800px; margin: 0 auto; }
+
+/* Header */
+.rc-header { display: grid; grid-template-columns: 1fr 100px 1fr; gap: 6px; margin-bottom: 8px; font-size: 8.5px; line-height: 1.4; }
+.rc-letterhead { text-align: left; }
+.rc-letterhead-right { text-align: right; }
+.rc-logo-center { text-align: center; }
+.rc-logo { width: 80px; height: 80px; object-fit: contain; }
+.rc-logo-ph { font-size: 40px; line-height: 80px; }
+.rc-title { text-align: center; font-size: 12px; font-weight: bold; text-transform: uppercase; border: 2px solid #000; padding: 5px; margin: 6px 0; }
+
+/* Student info */
+.rc-info-grid { border: 1px solid #000; margin-bottom: 6px; }
+.rc-info-row { display: grid; grid-template-columns: 130px 1fr 110px 1fr; border-bottom: 1px solid #ccc; }
+.rc-info-row:last-child { border-bottom: none; }
+.rc-info-label { background: #f0f0f0; font-weight: bold; padding: 3px 6px; font-size: 9px; border-right: 1px solid #ccc; }
+.rc-info-val { padding: 3px 6px; font-size: 9px; border-right: 1px solid #ccc; }
+
+/* Main table */
+.rc-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 6px; }
+.rc-table th { background: #1B2A4A; color: #fff; padding: 4px 3px; text-align: center; border: 1px solid #000; font-size: 8px; }
+.rc-table td { border: 1px solid #999; padding: 3px 3px; vertical-align: middle; }
+.rc-even { background: #fafafa; }
+.rc-odd  { background: #fff; }
+.rc-subj-col  { width: 140px; }
+.rc-subj-name { font-size: 8.5px; }
+.rc-fr        { font-size: 7.5px; color: #555; font-style: italic; }
+.rc-score     { width: 36px; }
+.rc-coef      { width: 28px; }
+.rc-total     { width: 44px; }
+.rc-pos       { width: 44px; }
+.rc-remark    { width: 90px; }
+.rc-teacher   { width: 90px; }
+.rc-num       { text-align: center; }
+.rc-total-cell { background: #FFF3D6; font-weight: bold; text-align: center; }
+.rc-remark-cell { font-size: 8px; }
+.rc-teacher-cell { font-size: 8px; font-style: italic; }
+
+/* Performance row */
+.rc-perf-row td { background: #EBF1F8; font-size: 8.5px; text-align: center; }
+
+/* Stats */
+.rc-bottom { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.rc-stats-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 6px; }
+.rc-stats-table th { background: #f0f0f0; padding: 3px 6px; text-align: left; border: 1px solid #ccc; font-weight: bold; }
+.rc-stats-table td { padding: 3px 6px; border: 1px solid #ccc; }
+
+/* Conduct */
+.rc-conduct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rc-conduct, .rc-academic { border: 1px solid #ccc; padding: 4px; }
+.rc-conduct-title { background: #1B2A4A; color: #fff; text-align: center; font-weight: bold; font-size: 9px; padding: 3px; margin-bottom: 4px; }
+.rc-conduct-table { width: 100%; border-collapse: collapse; font-size: 8.5px; }
+.rc-conduct-table td { border: 1px solid #ddd; padding: 2px 4px; }
+.rc-fees { margin-top: 6px; font-size: 9px; padding: 3px; border: 1px solid #ccc; }
+.rc-council { margin-top: 6px; font-size: 9px; }
+.rc-council strong { display: block; margin-bottom: 3px; font-size: 9px; text-transform: uppercase; }
+.rc-council p { margin: 2px 0; }
+.rc-parent-sig { margin-top: 12px; text-align: center; font-size: 9px; font-weight: bold; }
+.rc-sig-line { border-bottom: 1px solid #333; margin: 20px 10px 4px; }
+
+/* Student selector */
+.rc-student-list { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin-bottom: 16px; }
+.rc-student-list h3 { margin: 0 0 10px; font-size: 14px; color: #1B2A4A; }
+.rc-student-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.rc-student-btn { display: flex; flex-direction: column; align-items: flex-start; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; background: #fff; font-size: 12px; min-width: 160px; }
+.rc-student-btn:hover { background: #EBF1F8; border-color: #1B2A4A; }
+.rc-student-btn.active { background: #1B2A4A; color: #fff; border-color: #1B2A4A; }
+.rc-student-btn span { font-size: 11px; color: #888; }
+.rc-student-btn.active span { color: #ccc; }
+.avg-pass { color: #2E9E4E !important; font-weight: bold; }
+.avg-fail { color: #c0392b !important; font-weight: bold; }
+
+/* Print */
+@media print {
+  .no-print { display: none !important; }
+  .rc-wrapper { padding: 0; max-width: 100%; }
+  @page { size: A4 portrait; margin: 8mm; }
+}

@@ -329,3 +329,16 @@ if ($resource === 'promotions') {
 
 // Catch-all - must be last
 Response::json(['success' => false, 'message' => 'Route not found'], 404);
+
+// ── Report Card routes ─────────────────────────────────────
+require_once __DIR__ . '/controllers/ReportCardController.php';
+
+if ($resource === 'report-card') {
+    if ($method === 'GET' && isset($segments[1]) && $segments[1] === 'overview') {
+        Response::json(ReportCardController::classOverview()); return;
+    }
+    if ($method === 'GET') {
+        Response::json(ReportCardController::generate()); return;
+    }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405); return;
+}
