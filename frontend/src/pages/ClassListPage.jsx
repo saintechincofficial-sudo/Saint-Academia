@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useApi } from '../hooks/useApi';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import './ClassListPage.css';
 
 export default function ClassListPage() {
   const { get } = useApi();
@@ -39,15 +40,18 @@ export default function ClassListPage() {
     ? classes.filter(c => String(c.academic_year_id || c.year_id) === String(yearId))
     : [];
 
-  const handleYearChange = e => { setYearId(e.target.value); setClassId(''); setStudents([]); };
+  const handleYearChange = e => {
+    setYearId(e.target.value);
+    setClassId('');
+    setStudents([]);
+    setError('');
+  };
 
   const generate = async () => {
     if (!classId || !yearId) { setError('Select year and class'); return; }
     setLoading(true); setError('');
-    const cls = classes.find(c => String(c.id) === String(classId));
-    const yr  = years.find(y => String(y.id) === String(yearId));
-    setClassInfo(cls);
-    setYearInfo(yr);
+    setClassInfo(classes.find(c => String(c.id) === String(classId)));
+    setYearInfo(years.find(y => String(y.id) === String(yearId)));
     const res = await get(`/students?class_id=${classId}&academic_year_id=${yearId}&limit=100`);
     setLoading(false);
     if (res.success) setStudents(res.students || []);
@@ -93,9 +97,15 @@ export default function ClassListPage() {
   };
 
   const formatDate = d => {
-    if (!d) return '—';
+    if (!d) return '';
     try { return new Date(d).toLocaleDateString('en-GB'); } catch { return d; }
   };
+
+  const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost/SaintAcademia';
+
+  const sorted = [...students].sort((a, b) =>
+    (a.last_name + ' ' + a.first_name).localeCompare(b.last_name + ' ' + b.first_name)
+  );
 
   return (
     <div className="tab-content">
@@ -125,7 +135,9 @@ export default function ClassListPage() {
             onChange={e => { setClassId(e.target.value); setStudents([]); }}
             className="select-input" disabled={!yearId}>
             <option value="">— Select class —</option>
-            {filteredClasses.map(c => <option key={c.id} value={c.id}>{c.name} {c.stream || ''}</option>)}
+            {filteredClasses.map(c => (
+              <option key={c.id} value={c.id}>{c.name} {c.stream || ''}</option>
+            ))}
           </select>
         </div>
         <button className="btn-primary" onClick={generate} disabled={loading || !classId || !yearId}>
@@ -138,7 +150,6 @@ export default function ClassListPage() {
       {students.length > 0 && (
         <div ref={printRef} className="classlist-wrapper">
 
-          {/* ── Header ── */}
           <div className="cl-header">
             <div className="cl-letterhead-left">
               <p><strong>REPUBLIC OF CAMEROON</strong></p>
@@ -146,16 +157,16 @@ export default function ClassListPage() {
               <p>* * * * * * * * *</p>
               <p>MINISTRY OF SECONDARY EDUCATION</p>
               <p>* * * * * * * * *</p>
-              <p>REGIONAL DELEGATION FOR SOUTH WEST</p>
+              {school?.region     && <p>REGIONAL DELEGATION {school.region?.toUpperCase()}</p>}
               <p>* * * * * * * * *</p>
-              <p>DIVISIONAL DELEGATION FOR MEME</p>
+              {school?.delegation && <p>DIVISIONAL DELEGATION {school.delegation?.toUpperCase()}</p>}
               <p>* * * * * * * * *</p>
               <p><strong>{school?.name}</strong></p>
               <p>* * * * * * * * *</p>
             </div>
             <div className="cl-logo-center">
               {school?.logo_path
-                ? <img src={school.logo_path} alt="School logo" className="cl-logo" />
+                ? <img src={API_BASE + school.logo_path} alt="logo" className="cl-logo" />
                 : <div className="cl-logo-placeholder">🏫</div>
               }
             </div>
@@ -165,9 +176,9 @@ export default function ClassListPage() {
               <p>* * * * * * * * *</p>
               <p>MINISTERE DE L'ENSEIGNEMENT SECONDAIRE</p>
               <p>* * * * * * * * *</p>
-              <p>DELEGATION REGIONALE DU SUD OUEST</p>
+              {school?.region     && <p>DELEGATION REGIONALE {school.region?.toUpperCase()}</p>}
               <p>* * * * * * * * *</p>
-              <p>DELEGATION DEPARTEEMENTALE DE MEME</p>
+              {school?.delegation && <p>DELEGATION DEPARTEEMENTALE {school.delegation?.toUpperCase()}</p>}
               <p>* * * * * * * * *</p>
               <p><strong>COLLEGE POLYVALENT</strong></p>
               <p>* * * * * * * * *</p>
@@ -178,12 +189,11 @@ export default function ClassListPage() {
             {classInfo?.name} Classlist For the Academic Year {yearInfo?.label}
           </div>
 
-          {/* ── Table ── */}
           <table className="cl-table">
             <thead>
               <tr>
                 <th className="cl-name">NAME/Nom</th>
-                <th className="cl-sex">SEX</th>
+                <th className="cl-sex">SEXE</th>
                 <th className="cl-dob">DOB</th>
                 <th className="cl-pob">POB</th>
                 <th className="cl-contact">CONTACT</th>
@@ -200,34 +210,28 @@ export default function ClassListPage() {
               </tr>
             </thead>
             <tbody>
-              {[...students]
-                .sort((a, b) => `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`))
-                .map((s, i) => (
-                  <tr key={s.id} className={i % 2 === 0 ? 'cl-even' : 'cl-odd'}>
-                    <td className="cl-name-cell">
-                      <strong>{s.last_name} {s.first_name}</strong>
-                    </td>
-                    <td className="cl-center">{s.gender?.[0] || '—'}</td>
-                    <td className="cl-center">{formatDate(s.date_of_birth)}</td>
-                    <td>{s.place_of_birth || '—'}</td>
-                    <td>{s.phone || '—'}</td>
-                    <td className="cl-center">{s.entry_status || 'new'}</td>
-                    <td>{s.father_name || '—'}</td>
-                    <td>{s.mother_name || '—'}</td>
-                    <td className="cl-center">{s.local_id || '—'}</td>
-                    <td className="cl-ev-cell"></td>
-                    <td className="cl-ev-cell"></td>
-                    <td className="cl-ev-cell"></td>
-                    <td className="cl-ev-cell"></td>
-                    <td className="cl-ev-cell"></td>
-                    <td className="cl-ev-cell"></td>
-                  </tr>
-                ))
-              }
+              {sorted.map((s, i) => (
+                <tr key={s.id} className={i % 2 === 0 ? 'cl-even' : 'cl-odd'}>
+                  <td className="cl-name-cell"><strong>{s.last_name} {s.first_name}</strong></td>
+                  <td className="cl-center">{s.gender?.[0] || ''}</td>
+                  <td className="cl-center">{formatDate(s.date_of_birth)}</td>
+                  <td>{s.place_of_birth || ''}</td>
+                  <td>{s.phone || ''}</td>
+                  <td className="cl-center">{s.entry_status || 'new'}</td>
+                  <td>{s.father_name || ''}</td>
+                  <td>{s.mother_name || ''}</td>
+                  <td className="cl-center">{s.local_id || ''}</td>
+                  <td className="cl-ev-cell"></td>
+                  <td className="cl-ev-cell"></td>
+                  <td className="cl-ev-cell"></td>
+                  <td className="cl-ev-cell"></td>
+                  <td className="cl-ev-cell"></td>
+                  <td className="cl-ev-cell"></td>
+                </tr>
+              ))}
             </tbody>
           </table>
 
-          {/* ── Footer ── */}
           <div className="cl-footer">
             <div className="cl-sig">
               <div className="cl-sig-line"></div>
