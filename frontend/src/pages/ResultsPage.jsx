@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
+import { useAuth } from '../hooks/useAuth';
 
 function grade(score) {
   if (score >= 18) return 'A+';
@@ -13,6 +14,13 @@ function grade(score) {
 
 export default function ResultsPage() {
   const { get, post } = useApi();
+  const { user } = useAuth();
+
+  // Determine if user is teacher-only
+  const userRoles = Array.isArray(user?.roles) ? user.roles : [user?.role].filter(Boolean);
+  const isTeacher = userRoles.includes('teacher') && !userRoles.includes('school_admin') && !userRoles.includes('principal');
+
+  const [teacherWorkload, setTeacherWorkload] = useState([]); // for teacher role
 
   const [classes, setClasses]     = useState([]);
   const [terms, setTerms]         = useState([]);
@@ -127,7 +135,10 @@ export default function ResultsPage() {
             onChange={e => { setClassId(e.target.value); setMessage(''); setError(''); }}
             className="select-input">
             <option value="">— Select class —</option>
-            {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {(isTeacher
+              ? classes.filter(c => teacherWorkload.some(a => String(a.class_id) === String(c.id)))
+              : classes
+            ).map(c => <option key={c.id} value={c.id}>{c.name} {c.stream||''}</option>)}
           </select>
         </div>
 
@@ -151,7 +162,12 @@ export default function ResultsPage() {
             onChange={e => setSubjectId(e.target.value)}
             className="select-input">
             <option value="">— Select subject —</option>
-            {subjects.map(s => (
+            {(isTeacher
+              ? subjects.filter(s => teacherWorkload.some(a =>
+                  String(a.subject_id) === String(s.id) && String(a.class_id) === String(classId)
+                ))
+              : subjects
+            ).map(s => (
               <option key={s.id} value={s.id}>
                 {s.name} (×{s.coefficient})
               </option>
