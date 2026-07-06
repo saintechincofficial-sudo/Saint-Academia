@@ -343,5 +343,17 @@ if ($resource === 'report-card') {
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405); return;
 }
 
+// ── Workload routes ────────────────────────────────────────
+require_once __DIR__ . '/controllers/WorkloadController.php';
+
+if ($resource === 'workload') {
+    if ($method === 'GET' && isset($segments[1]) && $segments[1] === 'summary') {
+        Response::json(WorkloadController::summary()); return;
+    }
+    if ($method === 'GET')    { Response::json(WorkloadController::index());  return; }
+    if ($method === 'POST')   { Response::json(WorkloadController::assign()); return; }
+    if ($method === 'DELETE') { Response::json(WorkloadController::remove()); return; }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405); return;
+
 // Catch-all - must be last
-Response::json(['success' => false, 'message' => 'Route not found'], 404);
+Response::json(["success" => false, "message" => "Route not found"], 404);

@@ -143,13 +143,13 @@ class ReportCardController
             }
 
             // Get teacher assignments per subject
-            // Using staff_subject_assignments if exists, else class teacher
+            // Using workload if exists, else class teacher
             $teacherMap = [];
             try {
                 $stmt = $pdo->prepare(
                     'SELECT ssa.subject_id,
                             CONCAT(st.first_name, " ", st.last_name) AS teacher_name
-                     FROM staff_subject_assignments ssa
+                     FROM workload ssa
                      JOIN staff st ON st.id = ssa.staff_id
                      WHERE ssa.class_id = ?'
                 );

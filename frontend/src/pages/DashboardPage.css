@@ -275,3 +275,11 @@
 .promo-progress      { flex:1; min-width:200px; }
 .promo-progress-bar  { height:8px; background:#e0e0e0; border-radius:4px; margin-top:6px; overflow:hidden; }
 .promo-progress-fill { height:100%; background:#2E9E4E; border-radius:4px; transition:width 0.3s ease; }
+
+/* ── Workload page ──────────────────────────────────── */
+.wl-summary-bar   { display:flex; gap:24px; background:#EBF1F8; padding:10px 16px; border-radius:8px; margin-bottom:16px; font-size:14px; }
+.wl-teacher-block { border:1px solid #e0e0e0; border-radius:8px; margin-bottom:16px; overflow:hidden; }
+.wl-teacher-header { display:flex; justify-content:space-between; align-items:center; background:#1B2A4A; color:#fff; padding:10px 14px; }
+.wl-staff-num  { font-size:12px; color:#ccc; }
+.wl-role-badge { background:#1E88C7; color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px; }
+.wl-totals     { display:flex; gap:16px; font-size:13px; color:#cce; }
