@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import './DashboardPage.css';
 import { useAuth } from '../hooks/useAuth';
 import StudentList from '../components/StudentList/StudentList';
 import StudentForm from '../components/StudentForm/StudentForm';
