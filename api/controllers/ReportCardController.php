@@ -398,10 +398,8 @@ class ReportCardController
         } catch (Throwable $e) {
             return ['success' => false, 'message' => 'Failed to load class overview', 'error' => $e->getMessage()];
         }
-    }
-}
 
-    // Generate all report cards for a class at once
+    }
     public static function generateAll(): array
     {
         try {
@@ -417,7 +415,6 @@ class ReportCardController
             $pdo      = getDatabaseConnection();
             $schoolId = SchoolHelper::resolveSchoolId($pdo);
 
-            // Get all enrolled students
             $stmt = $pdo->prepare(
                 'SELECT s.id FROM student_enrollments se
                  JOIN students s ON s.id = se.student_id
@@ -429,12 +426,12 @@ class ReportCardController
             $studentIds = array_column($stmt->fetchAll(), 'id');
 
             if (empty($studentIds)) {
-                return ['success' => false, 'message' => 'No students enrolled in this class'];
+                return ['success' => false, 'message' => 'No students enrolled'];
             }
 
             $reportCards = [];
-            foreach ($studentIds as $studentId) {
-                $_GET['student_id']       = $studentId;
+            foreach ($studentIds as $sid) {
+                $_GET['student_id']       = $sid;
                 $_GET['class_id']         = $classId;
                 $_GET['academic_year_id'] = $academicYearId;
                 $_GET['term_id']          = $termId;
@@ -453,3 +450,4 @@ class ReportCardController
             return ['success' => false, 'message' => 'Failed to generate all report cards', 'error' => $e->getMessage()];
         }
     }
+}
