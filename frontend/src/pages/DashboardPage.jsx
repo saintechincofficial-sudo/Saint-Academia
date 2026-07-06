@@ -1,6 +1,10 @@
 import { useState } from 'react';
-import './DashboardPage.css';
 import { useAuth } from '../hooks/useAuth';
+import {
+  LayoutDashboard, Users, UserCheck, School, BookOpen,
+  ClipboardList, PenLine, BarChart3, GraduationCap,
+  FileText, List, Calendar, Building2, ChevronLeft, ChevronRight, Settings
+} from 'lucide-react';
 import StudentList from '../components/StudentList/StudentList';
 import StudentForm from '../components/StudentForm/StudentForm';
 import StaffPage from './StaffPage';
@@ -16,61 +20,61 @@ import PromotionPage from './PromotionPage';
 import ClassListPage from './ClassListPage';
 import ReportCardPage from './ReportCardPage';
 import WorkloadPage from './WorkloadPage';
+import './DashboardPage.css';
 
 const NAV_GROUPS = [
   {
     label: 'Overview',
     items: [
-      { id: 'overview', label: 'Dashboard', icon: '🏠', roles: ['super_admin','school_admin'] },
+      { id:'overview',    label:'Dashboard',    Icon:LayoutDashboard, roles:['super_admin','school_admin'] },
     ]
   },
   {
     label: 'People',
     items: [
-      { id: 'students',   label: 'Students',   icon: '👥', roles: ['super_admin','school_admin'] },
-      { id: 'staff',      label: 'Staff',       icon: '👨‍🏫', roles: ['super_admin','school_admin'] },
+      { id:'students',    label:'Students',     Icon:Users,           roles:['super_admin','school_admin'] },
+      { id:'staff',       label:'Staff',        Icon:UserCheck,       roles:['super_admin','school_admin'] },
     ]
   },
   {
     label: 'Academic',
     items: [
-      { id: 'classes',    label: 'Classes',     icon: '🏫', roles: ['super_admin','school_admin'] },
-      { id: 'subjects',   label: 'Subjects',    icon: '📚', roles: ['school_admin'] },
-      { id: 'enrollment', label: 'Enrollment',  icon: '📋', roles: ['school_admin'] },
-      { id: 'results',    label: 'Results',     icon: '✏️',  roles: ['school_admin'] },
-      { id: 'workload',   label: 'Workload',    icon: '📅', roles: ['school_admin'] },
+      { id:'classes',     label:'Classes',      Icon:School,          roles:['super_admin','school_admin'] },
+      { id:'subjects',    label:'Subjects',     Icon:BookOpen,        roles:['school_admin'] },
+      { id:'enrollment',  label:'Enrollment',   Icon:ClipboardList,   roles:['school_admin'] },
+      { id:'results',     label:'Results',      Icon:PenLine,         roles:['school_admin'] },
+      { id:'workload',    label:'Workload',     Icon:Calendar,        roles:['school_admin'] },
     ]
   },
   {
     label: 'Reports',
     items: [
-      { id: 'mastersheet', label: 'Mastersheet', icon: '📊', roles: ['school_admin'] },
-      { id: 'reportcard',  label: 'Report Cards',icon: '📄', roles: ['school_admin'] },
-      { id: 'classlist',   label: 'Class List',  icon: '🗒️', roles: ['school_admin'] },
-      { id: 'promotion',   label: 'Promotion',   icon: '🎓', roles: ['school_admin'] },
+      { id:'mastersheet', label:'Mastersheet',  Icon:BarChart3,       roles:['school_admin'] },
+      { id:'reportcard',  label:'Report Cards', Icon:FileText,        roles:['school_admin'] },
+      { id:'classlist',   label:'Class List',   Icon:List,            roles:['school_admin'] },
+      { id:'promotion',   label:'Promotion',    Icon:GraduationCap,   roles:['school_admin'] },
     ]
   },
   {
     label: 'Admin',
     items: [
-      { id: 'school',  label: 'My School',  icon: '🏫', roles: ['school_admin'] },
-      { id: 'schools', label: 'Schools',    icon: '🏢', roles: ['super_admin'] },
+      { id:'school',      label:'My School',    Icon:Settings,        roles:['school_admin'] },
+      { id:'schools',     label:'Schools',      Icon:Building2,       roles:['super_admin'] },
     ]
   },
 ];
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab]               = useState('overview');
-  const [sidebarOpen, setSidebarOpen]           = useState(true);
-  const [showStudentForm, setShowStudentForm]   = useState(false);
-  const [editingStudent, setEditingStudent]     = useState(null);
-  const [studentRefresh, setStudentRefresh]     = useState(0);
+  const [activeTab,    setActiveTab]    = useState('overview');
+  const [sidebarOpen,  setSidebarOpen]  = useState(true);
+  const [showStudentForm,  setShowStudentForm]  = useState(false);
+  const [editingStudent,   setEditingStudent]   = useState(null);
+  const [studentRefresh,   setStudentRefresh]   = useState(0);
 
-  const handleLogout = () => { logout(); window.location.href = '/'; };
-
+  const handleLogout        = () => { logout(); window.location.href = '/'; };
   const handleAddStudent    = () => { setEditingStudent(null); setShowStudentForm(true); };
-  const handleEditStudent   = s  => { setEditingStudent(s);    setShowStudentForm(true); };
+  const handleEditStudent   = s  => { setEditingStudent(s);   setShowStudentForm(true); };
   const handleStudentSubmit = () => { setShowStudentForm(false); setEditingStudent(null); setStudentRefresh(p=>p+1); };
   const handleStudentCancel = () => { setShowStudentForm(false); setEditingStudent(null); };
 
@@ -81,18 +85,19 @@ export default function DashboardPage() {
   })).filter(g => g.items.length > 0);
 
   const activeItem = allItems.find(i => i.id === activeTab);
+  const ActiveIcon = activeItem?.Icon;
 
   return (
     <div className="app-shell">
 
-      {/* ── Top header ── */}
+      {/* Header */}
       <header className="app-header">
         <div className="app-header-left">
           <button className="sidebar-toggle" onClick={() => setSidebarOpen(p => !p)}>
-            {sidebarOpen ? '◀' : '▶'}
+            {sidebarOpen ? <ChevronLeft size={16}/> : <ChevronRight size={16}/>}
           </button>
           <div className="app-logo">
-            <span className="app-logo-icon">🎓</span>
+            <GraduationCap size={22} color="#7ec8f0" />
             <span className="app-logo-text">Saint Academia</span>
           </div>
         </div>
@@ -105,30 +110,29 @@ export default function DashboardPage() {
 
       <div className="app-body">
 
-        {/* ── Sidebar ── */}
+        {/* Sidebar */}
         <aside className={`app-sidebar ${sidebarOpen ? 'open' : 'collapsed'}`}>
           {visibleGroups.map(group => (
             <div key={group.label} className="nav-group">
               {sidebarOpen && <div className="nav-group-label">{group.label}</div>}
-              {group.items.map(item => (
-                <button key={item.id}
-                  className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-                  onClick={() => setActiveTab(item.id)}
-                  title={item.label}>
-                  <span className="nav-icon">{item.icon}</span>
-                  {sidebarOpen && <span className="nav-label">{item.label}</span>}
+              {group.items.map(({ id, label, Icon }) => (
+                <button key={id}
+                  className={`nav-item ${activeTab === id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(id)}
+                  title={!sidebarOpen ? label : undefined}>
+                  <span className="nav-icon"><Icon size={17} strokeWidth={1.8}/></span>
+                  {sidebarOpen && <span className="nav-label">{label}</span>}
                 </button>
               ))}
             </div>
           ))}
         </aside>
 
-        {/* ── Main content ── */}
+        {/* Main */}
         <main className="app-main">
           <div className="page-header">
-            <h1 className="page-title">
-              {activeItem?.icon} {activeItem?.label || 'Dashboard'}
-            </h1>
+            {ActiveIcon && <ActiveIcon size={20} color="#1B2A4A" strokeWidth={2}/>}
+            <h1 className="page-title">{activeItem?.label || 'Dashboard'}</h1>
           </div>
 
           <div className="page-content">
@@ -139,7 +143,7 @@ export default function DashboardPage() {
                 <div className="overview-card-grid">
                   <div className="overview-card">
                     <h3>Setup order</h3>
-                    <ol style={{ paddingLeft:18, fontSize:13, lineHeight:2 }}>
+                    <ol style={{ paddingLeft:18, fontSize:13.5, lineHeight:2, color:'#4a5568' }}>
                       <li>Add <strong>Subjects</strong> with coefficients</li>
                       <li>Create <strong>Classes</strong></li>
                       <li>Add <strong>Students</strong></li>
@@ -153,12 +157,15 @@ export default function DashboardPage() {
                     <div className="overview-actions">
                       {['students','staff','classes','subjects','enrollment','results','mastersheet'].map(id => {
                         const item = allItems.find(i => i.id === id);
-                        return item ? (
+                        if (!item) return null;
+                        const Ic = item.Icon;
+                        return (
                           <button key={id} className="btn-secondary"
-                            onClick={() => setActiveTab(id)}>
-                            {item.icon} {item.label}
+                            onClick={() => setActiveTab(id)}
+                            style={{ display:'flex', alignItems:'center', gap:6 }}>
+                            <Ic size={14} strokeWidth={2}/> {item.label}
                           </button>
-                        ) : null;
+                        );
                       })}
                     </div>
                   </div>
