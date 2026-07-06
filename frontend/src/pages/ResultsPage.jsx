@@ -28,6 +28,8 @@ export default function ResultsPage() {
   const [students, setStudents]   = useState([]);
   const [marks, setMarks]         = useState({});
 
+  const [yearId,  setYearId]      = useState('');
+  const [years,   setYears]       = useState([]);
   const [classId, setClassId]     = useState('');
   const [termId, setTermId]       = useState('');
   const [subjectId, setSubjectId] = useState('');
@@ -130,14 +132,23 @@ export default function ResultsPage() {
 
       <div className="filter-bar">
         <div className="form-group">
+          <label>Academic Year</label>
+          <select value={yearId}
+            onChange={e => { setYearId(e.target.value); setClassId(''); setSubjectId(''); setStudents([]); setMarks({}); }}
+            className="select-input">
+            <option value="">— Select year —</option>
+            {years.map(y => <option key={y.id} value={y.id}>{y.label}</option>)}
+          </select>
+        </div>
+        <div className="form-group">
           <label>Class</label>
           <select value={classId}
             onChange={e => { setClassId(e.target.value); setMessage(''); setError(''); }}
-            className="select-input">
+            className="select-input" disabled={!yearId}>
             <option value="">— Select class —</option>
             {(isTeacher
-              ? classes.filter(c => teacherWorkload.some(a => String(a.class_id) === String(c.id)))
-              : classes
+              ? classes.filter(c => teacherWorkload.some(a => String(a.class_id) === String(c.id)) && String(c.academic_year_id || c.year_id) === String(yearId))
+              : classes.filter(c => !yearId || String(c.academic_year_id || c.year_id) === String(yearId))
             ).map(c => <option key={c.id} value={c.id}>{c.name} {c.stream||''}</option>)}
           </select>
         </div>
