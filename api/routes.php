@@ -327,9 +327,6 @@ if ($resource === 'promotions') {
     return;
 }
 
-// Catch-all - must be last
-Response::json(['success' => false, 'message' => 'Route not found'], 404);
-
 // ── Report Card routes ─────────────────────────────────────
 require_once __DIR__ . '/controllers/ReportCardController.php';
 
@@ -342,3 +339,6 @@ if ($resource === 'report-card') {
     }
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405); return;
 }
+
+// Catch-all - must be last
+Response::json(['success' => false, 'message' => 'Route not found'], 404);
