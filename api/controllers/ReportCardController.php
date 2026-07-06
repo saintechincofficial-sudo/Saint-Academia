@@ -400,3 +400,56 @@ class ReportCardController
         }
     }
 }
+
+    // Generate all report cards for a class at once
+    public static function generateAll(): array
+    {
+        try {
+            Auth::check();
+            $classId        = isset($_GET['class_id'])         ? (int)$_GET['class_id']         : 0;
+            $academicYearId = isset($_GET['academic_year_id']) ? (int)$_GET['academic_year_id'] : 0;
+            $termId         = isset($_GET['term_id'])          ? (int)$_GET['term_id']          : 0;
+
+            if (!$classId || !$academicYearId || !$termId) {
+                return ['success' => false, 'message' => 'class_id, academic_year_id and term_id are required'];
+            }
+
+            $pdo      = getDatabaseConnection();
+            $schoolId = SchoolHelper::resolveSchoolId($pdo);
+
+            // Get all enrolled students
+            $stmt = $pdo->prepare(
+                'SELECT s.id FROM student_enrollments se
+                 JOIN students s ON s.id = se.student_id
+                 WHERE se.class_id = ? AND se.academic_year_id = ?
+                   AND se.school_id = ? AND se.status = \'active\'
+                 ORDER BY s.last_name, s.first_name'
+            );
+            $stmt->execute([$classId, $academicYearId, $schoolId]);
+            $studentIds = array_column($stmt->fetchAll(), 'id');
+
+            if (empty($studentIds)) {
+                return ['success' => false, 'message' => 'No students enrolled in this class'];
+            }
+
+            $reportCards = [];
+            foreach ($studentIds as $studentId) {
+                $_GET['student_id']       = $studentId;
+                $_GET['class_id']         = $classId;
+                $_GET['academic_year_id'] = $academicYearId;
+                $_GET['term_id']          = $termId;
+                $result = self::generate();
+                if ($result['success']) {
+                    $reportCards[] = $result['report_card'];
+                }
+            }
+
+            return [
+                'success'      => true,
+                'report_cards' => $reportCards,
+                'count'        => count($reportCards),
+            ];
+        } catch (Throwable $e) {
+            return ['success' => false, 'message' => 'Failed to generate all report cards', 'error' => $e->getMessage()];
+        }
+    }

@@ -334,6 +334,9 @@ if ($resource === 'report-card') {
     if ($method === 'GET' && isset($segments[1]) && $segments[1] === 'overview') {
         Response::json(ReportCardController::classOverview()); return;
     }
+    if ($method === 'GET' && isset($segments[1]) && $segments[1] === 'all') {
+        Response::json(ReportCardController::generateAll()); return;
+    }
     if ($method === 'GET') {
         Response::json(ReportCardController::generate()); return;
     }
