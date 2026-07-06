@@ -209,9 +209,6 @@ class Staff {
             $errors[] = 'Last name is required';
         }
 
-        if (!empty($data['role']) && !in_array($data['role'], $this->availableRoles(), true)) {
-            $errors[] = 'Invalid staff role';
-        }
 
         if (!empty($data['department']) && !in_array($data['department'], $this->availableDepartments(), true)) {
             $errors[] = 'Invalid department selection';
