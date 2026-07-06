@@ -91,6 +91,9 @@ if ($resource === 'auth' && isset($segments[1]) && $segments[1] === 'login') {
     return;
 }
 
+if ($resource === 'students' && isset($segments[1]) && $segments[1] === 'photo') {
+    if ($method === 'POST') { Response::json(StudentController::uploadPhoto()); return; }
+}
 if ($resource === 'students') {
     if (isset($segments[1]) && is_numeric($segments[1])) {
         $_GET['id'] = $segments[1];
@@ -122,6 +125,9 @@ if ($resource === 'students') {
     return;
 }
 
+if ($resource === 'staff' && isset($segments[1]) && $segments[1] === 'photo') {
+    if ($method === 'POST') { Response::json(StaffController::uploadPhoto()); return; }
+}
 if ($resource === 'staff') {
     if (isset($segments[1]) && is_numeric($segments[1])) {
         $_GET['id'] = $segments[1];

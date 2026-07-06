@@ -166,14 +166,24 @@ class Student {
         try {
             $sql = "UPDATE students
                     SET first_name=?, last_name=?, date_of_birth=?,
-                        gender=?, phone=?, email=?, status=?
+                        place_of_birth=?, gender=?, phone=?, email=?,
+                        father_name=?, mother_name=?, local_id=?,
+                        entry_status=?, status=?
                     WHERE id=? AND school_id=?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([
                 $data['first_name'], $data['last_name'],
-                $data['date_of_birth'] ?? null, $data['gender'] ?? null,
-                $data['phone'] ?? null, $data['email'] ?? null,
-                $data['status'] ?? 'active', $id, $this->getSchoolId()
+                $data['date_of_birth'] ?? null,
+                $data['place_of_birth'] ?? null,
+                $data['gender'] ?? null,
+                $data['phone'] ?? null,
+                $data['email'] ?? null,
+                $data['father_name'] ?? null,
+                $data['mother_name'] ?? null,
+                $data['local_id'] ?? null,
+                $data['entry_status'] ?? 'new',
+                $data['status'] ?? 'active',
+                $id, $this->getSchoolId()
             ]);
             return ['success' => true, 'message' => 'Student updated successfully'];
         } catch (Exception $e) {

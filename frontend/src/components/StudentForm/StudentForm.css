@@ -137,3 +137,20 @@ form {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ── New layout styles ───────────────────────────────── */
+.student-form-card { background:#f7f9fc; border:1px solid #e5e9f0; border-radius:10px; padding:20px; margin-bottom:20px; }
+.student-form-title { margin:0 0 16px; font-size:15px; font-weight:700; color:#1B2A4A; }
+.sf-layout  { display:flex; gap:24px; }
+.sf-photo-col { display:flex; flex-direction:column; align-items:center; gap:10px; min-width:120px; }
+.sf-photo-box { width:100px; height:120px; border:2px dashed #d0d8e4; border-radius:8px; overflow:hidden; background:#fff; display:flex; align-items:center; justify-content:center; }
+.sf-photo-img { width:100%; height:100%; object-fit:cover; }
+.sf-photo-placeholder { font-size:11px; color:#aaa; text-align:center; padding:8px; }
+.sf-photo-btn { display:inline-block; padding:6px 12px; background:#1B2A4A; color:#fff; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; text-align:center; }
+.sf-photo-hint { font-size:11px; color:#2E9E4E; text-align:center; margin:0; }
+.sf-fields-col { flex:1; }
+.sf-section-label { font-size:11px; font-weight:700; color:#7a8fae; text-transform:uppercase; letter-spacing:0.8px; margin:14px 0 8px; border-bottom:1px solid #e5e9f0; padding-bottom:4px; }
+.sf-section-label:first-child { margin-top:0; }
+.sf-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+.sf-row .form-group { flex:1; min-width:140px; }
+.sf-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; border-top:1px solid #e5e9f0; padding-top:16px; }

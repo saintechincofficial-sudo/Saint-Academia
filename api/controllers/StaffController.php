@@ -128,3 +128,48 @@ class StaffController {
         }
     }
 }
+
+    public static function uploadPhoto(): array
+    {
+        try {
+            Auth::check();
+            TenantContext::requireSchoolId();
+
+            $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if (!$id) return ['success' => false, 'message' => 'Staff ID is required'];
+
+            if (!isset($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
+                return ['success' => false, 'message' => 'No photo uploaded or upload error'];
+            }
+
+            $file    = $_FILES['photo'];
+            $ext     = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg','jpeg','png','webp'];
+            if (!in_array($ext, $allowed)) {
+                return ['success' => false, 'message' => 'Only JPG, PNG or WEBP images allowed'];
+            }
+            if ($file['size'] > 2 * 1024 * 1024) {
+                return ['success' => false, 'message' => 'Photo must be under 2MB'];
+            }
+
+            $uploadDir = __DIR__ . '/../../uploads/staff/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
+            $filename = 'staff_' . $id . '_' . time() . '.' . $ext;
+            $dest     = $uploadDir . $filename;
+
+            if (!move_uploaded_file($file['tmp_name'], $dest)) {
+                return ['success' => false, 'message' => 'Failed to save photo'];
+            }
+
+            $path     = '/uploads/staff/' . $filename;
+            $pdo      = getDatabaseConnection();
+            $schoolId = TenantContext::getSchoolId(1);
+            $pdo->prepare('UPDATE staff SET photo_path = ? WHERE id = ? AND school_id = ?')
+                ->execute([$path, $id, $schoolId]);
+
+            return ['success' => true, 'message' => 'Photo uploaded', 'photo_path' => $path];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Upload failed', 'error' => $e->getMessage()];
+        }
+    }
