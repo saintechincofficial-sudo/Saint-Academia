@@ -15,158 +15,185 @@ import PromotionPage from './PromotionPage';
 import ClassListPage from './ClassListPage';
 import ReportCardPage from './ReportCardPage';
 import WorkloadPage from './WorkloadPage';
-import './DashboardPage.css';
 
-function DashboardPage() {
+const NAV_GROUPS = [
+  {
+    label: 'Overview',
+    items: [
+      { id: 'overview', label: 'Dashboard', icon: '🏠', roles: ['super_admin','school_admin'] },
+    ]
+  },
+  {
+    label: 'People',
+    items: [
+      { id: 'students',   label: 'Students',   icon: '👥', roles: ['super_admin','school_admin'] },
+      { id: 'staff',      label: 'Staff',       icon: '👨‍🏫', roles: ['super_admin','school_admin'] },
+    ]
+  },
+  {
+    label: 'Academic',
+    items: [
+      { id: 'classes',    label: 'Classes',     icon: '🏫', roles: ['super_admin','school_admin'] },
+      { id: 'subjects',   label: 'Subjects',    icon: '📚', roles: ['school_admin'] },
+      { id: 'enrollment', label: 'Enrollment',  icon: '📋', roles: ['school_admin'] },
+      { id: 'results',    label: 'Results',     icon: '✏️',  roles: ['school_admin'] },
+      { id: 'workload',   label: 'Workload',    icon: '📅', roles: ['school_admin'] },
+    ]
+  },
+  {
+    label: 'Reports',
+    items: [
+      { id: 'mastersheet', label: 'Mastersheet', icon: '📊', roles: ['school_admin'] },
+      { id: 'reportcard',  label: 'Report Cards',icon: '📄', roles: ['school_admin'] },
+      { id: 'classlist',   label: 'Class List',  icon: '🗒️', roles: ['school_admin'] },
+      { id: 'promotion',   label: 'Promotion',   icon: '🎓', roles: ['school_admin'] },
+    ]
+  },
+  {
+    label: 'Admin',
+    items: [
+      { id: 'school',  label: 'My School',  icon: '🏫', roles: ['school_admin'] },
+      { id: 'schools', label: 'Schools',    icon: '🏢', roles: ['super_admin'] },
+    ]
+  },
+];
+
+export default function DashboardPage() {
   const { user, logout } = useAuth();
-  const [showStudentForm, setShowStudentForm]             = useState(false);
-  const [editingStudent, setEditingStudent]               = useState(null);
-  const [studentRefreshTrigger, setStudentRefreshTrigger] = useState(0);
-  const [activeTab, setActiveTab]                         = useState('overview');
+  const [activeTab, setActiveTab]               = useState('overview');
+  const [sidebarOpen, setSidebarOpen]           = useState(true);
+  const [showStudentForm, setShowStudentForm]   = useState(false);
+  const [editingStudent, setEditingStudent]     = useState(null);
+  const [studentRefresh, setStudentRefresh]     = useState(0);
 
   const handleLogout = () => { logout(); window.location.href = '/'; };
 
-  const handleAddStudent = () => {
-    setEditingStudent(null);
-    setShowStudentForm(true);
-  };
-  const handleEditStudent = (s) => {
-    setEditingStudent(s);
-    setShowStudentForm(true);
-  };
-  const handleStudentSubmit = () => {
-    setShowStudentForm(false);
-    setEditingStudent(null);
-    setStudentRefreshTrigger(p => p + 1);
-  };
-  const handleStudentCancel = () => {
-    setShowStudentForm(false);
-    setEditingStudent(null);
-  };
+  const handleAddStudent    = () => { setEditingStudent(null); setShowStudentForm(true); };
+  const handleEditStudent   = s  => { setEditingStudent(s);    setShowStudentForm(true); };
+  const handleStudentSubmit = () => { setShowStudentForm(false); setEditingStudent(null); setStudentRefresh(p=>p+1); };
+  const handleStudentCancel = () => { setShowStudentForm(false); setEditingStudent(null); };
 
-  const allTabs = [
-    { id: 'overview',    label: '🏠 Overview',    roles: ['super_admin','school_admin'] },
-    { id: 'students',    label: '👥 Students',    roles: ['super_admin','school_admin'] },
-    { id: 'staff',       label: '👨‍🏫 Staff',      roles: ['super_admin','school_admin'] },
-    { id: 'classes',     label: '🏫 Classes',     roles: ['super_admin','school_admin'] },
-    { id: 'subjects',    label: '📚 Subjects',    roles: ['school_admin'] },
-    { id: 'enrollment',  label: '📋 Enrollment',  roles: ['school_admin'] },
-    { id: 'results',     label: '✏️ Results',      roles: ['school_admin'] },
-    { id: 'mastersheet', label: '📊 Mastersheet', roles: ['school_admin'] },
-    { id: 'promotion',   label: '🎓 Promotion',   roles: ['school_admin'] },
-    { id: 'classlist',   label: '📋 Class List',   roles: ['school_admin'] },
-    { id: 'reportcard',  label: '📄 Report Cards',  roles: ['school_admin'] },
-    { id: 'workload',    label: '📅 Workload',       roles: ['school_admin'] },
-    { id: 'schools',     label: '🏢 Schools',     roles: ['super_admin'] },
-    { id: 'school',      label: '🏫 My School',   roles: ['school_admin'] },
-  ];
+  const allItems = NAV_GROUPS.flatMap(g => g.items);
+  const visibleGroups = NAV_GROUPS.map(g => ({
+    ...g,
+    items: g.items.filter(i => i.roles.includes(user?.role))
+  })).filter(g => g.items.length > 0);
 
-  const tabs = allTabs.filter(t => t.roles.includes(user?.role));
+  const activeItem = allItems.find(i => i.id === activeTab);
 
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <div className="header-content">
-          <h1>Saint Academia</h1>
-          <div className="user-info">
-            <span>{user?.email}</span>
-            <span className="role-badge">{user?.role}</span>
-            <button onClick={handleLogout} className="logout-btn">Logout</button>
+    <div className="app-shell">
+
+      {/* ── Top header ── */}
+      <header className="app-header">
+        <div className="app-header-left">
+          <button className="sidebar-toggle" onClick={() => setSidebarOpen(p => !p)}>
+            {sidebarOpen ? '◀' : '▶'}
+          </button>
+          <div className="app-logo">
+            <span className="app-logo-icon">🎓</span>
+            <span className="app-logo-text">Saint Academia</span>
           </div>
+        </div>
+        <div className="app-header-right">
+          <span className="header-user">{user?.email}</span>
+          <span className="header-role-badge">{user?.role}</span>
+          <button onClick={handleLogout} className="header-logout-btn">Logout</button>
         </div>
       </header>
 
-      <nav className="dashboard-nav">
-        {tabs.map(t => (
-          <button key={t.id}
-            className={`nav-btn ${activeTab === t.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(t.id)}>
-            {t.label}
-          </button>
-        ))}
-      </nav>
+      <div className="app-body">
 
-      <main className="dashboard-main">
+        {/* ── Sidebar ── */}
+        <aside className={`app-sidebar ${sidebarOpen ? 'open' : 'collapsed'}`}>
+          {visibleGroups.map(group => (
+            <div key={group.label} className="nav-group">
+              {sidebarOpen && <div className="nav-group-label">{group.label}</div>}
+              {group.items.map(item => (
+                <button key={item.id}
+                  className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
+                  onClick={() => setActiveTab(item.id)}
+                  title={item.label}>
+                  <span className="nav-icon">{item.icon}</span>
+                  {sidebarOpen && <span className="nav-label">{item.label}</span>}
+                </button>
+              ))}
+            </div>
+          ))}
+        </aside>
 
-        {activeTab === 'overview' && (
-          <div className="tab-content">
-            <DashboardSummary />
-            <div className="overview-card-grid">
-              <div className="overview-card">
-                <h3>Quick access</h3>
-                <div className="overview-actions">
-                  <button className="btn-secondary" onClick={() => setActiveTab('students')}>Students</button>
-                  <button className="btn-secondary" onClick={() => setActiveTab('staff')}>Staff</button>
-                  <button className="btn-secondary" onClick={() => setActiveTab('classes')}>Classes</button>
-                  <button className="btn-secondary" onClick={() => setActiveTab('subjects')}>Subjects</button>
-                  <button className="btn-secondary" onClick={() => setActiveTab('enrollment')}>Enrollment</button>
-                  <button className="btn-secondary" onClick={() => setActiveTab('results')}>Results</button>
-                  <button className="btn-secondary" onClick={() => setActiveTab('mastersheet')}>Mastersheet</button>
-                </div>
-              </div>
-              <div className="overview-card">
-                <h3>Setup order</h3>
-                <ol style={{ paddingLeft: 18, fontSize: 13, lineHeight: 2 }}>
-                  <li>Add <strong>Subjects</strong> with coefficients</li>
-                  <li>Create <strong>Classes</strong></li>
-                  <li>Add <strong>Students</strong></li>
-                  <li><strong>Enroll</strong> students into classes</li>
-                  <li>Enter marks via <strong>Results</strong></li>
-                  <li>Generate the <strong>Mastersheet</strong></li>
-                </ol>
-              </div>
-              {user?.role === 'school_admin' && (
-                <div className="overview-card">
-                  <h3>My School</h3>
-                  <div className="overview-actions">
-                    <button className="btn-secondary" onClick={() => setActiveTab('school')}>
-                      School Profile
-                    </button>
+        {/* ── Main content ── */}
+        <main className="app-main">
+          <div className="page-header">
+            <h1 className="page-title">
+              {activeItem?.icon} {activeItem?.label || 'Dashboard'}
+            </h1>
+          </div>
+
+          <div className="page-content">
+
+            {activeTab === 'overview' && (
+              <>
+                <DashboardSummary />
+                <div className="overview-card-grid">
+                  <div className="overview-card">
+                    <h3>Setup order</h3>
+                    <ol style={{ paddingLeft:18, fontSize:13, lineHeight:2 }}>
+                      <li>Add <strong>Subjects</strong> with coefficients</li>
+                      <li>Create <strong>Classes</strong></li>
+                      <li>Add <strong>Students</strong></li>
+                      <li><strong>Enroll</strong> students into classes</li>
+                      <li>Enter marks via <strong>Results</strong></li>
+                      <li>Generate the <strong>Mastersheet</strong></li>
+                    </ol>
+                  </div>
+                  <div className="overview-card">
+                    <h3>Quick access</h3>
+                    <div className="overview-actions">
+                      {['students','staff','classes','subjects','enrollment','results','mastersheet'].map(id => {
+                        const item = allItems.find(i => i.id === id);
+                        return item ? (
+                          <button key={id} className="btn-secondary"
+                            onClick={() => setActiveTab(id)}>
+                            {item.icon} {item.label}
+                          </button>
+                        ) : null;
+                      })}
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'students' && (
-          <div className="tab-content">
-            {showStudentForm && (
-              <StudentForm
-                student={editingStudent}
-                onSubmit={handleStudentSubmit}
-                onCancel={handleStudentCancel}
-              />
+              </>
             )}
-            <div className="section-header">
-              <h2>Student Management</h2>
-              <button className="btn-primary" onClick={handleAddStudent}>
-                + Add Student
-              </button>
-            </div>
-            <StudentList
-              onEdit={handleEditStudent}
-              refreshTrigger={studentRefreshTrigger}
-            />
+
+            {activeTab === 'students' && (
+              <div className="tab-content">
+                {showStudentForm && (
+                  <StudentForm student={editingStudent} onSubmit={handleStudentSubmit} onCancel={handleStudentCancel} />
+                )}
+                <div className="section-header">
+                  <h2>Student Management</h2>
+                  <button className="btn-primary" onClick={handleAddStudent}>+ Add Student</button>
+                </div>
+                <StudentList onEdit={handleEditStudent} refreshTrigger={studentRefresh} />
+              </div>
+            )}
+
+            {activeTab === 'staff'       && <StaffPage />}
+            {activeTab === 'classes'     && <ClassPage />}
+            {activeTab === 'subjects'    && <SubjectsPage />}
+            {activeTab === 'enrollment'  && <EnrollmentPage />}
+            {activeTab === 'results'     && <ResultsPage />}
+            {activeTab === 'workload'    && <WorkloadPage />}
+            {activeTab === 'mastersheet' && <MastersheetPage />}
+            {activeTab === 'reportcard'  && <ReportCardPage />}
+            {activeTab === 'classlist'   && <ClassListPage />}
+            {activeTab === 'promotion'   && <PromotionPage />}
+            {activeTab === 'school'  && user?.role !== 'super_admin' && <SchoolProfile />}
+            {activeTab === 'schools' && user?.role === 'super_admin'  && <SuperAdminSchools />}
+
           </div>
-        )}
-
-        {activeTab === 'staff'       && <StaffPage />}
-        {activeTab === 'classes'     && <ClassPage />}
-        {activeTab === 'subjects'    && <SubjectsPage />}
-        {activeTab === 'enrollment'  && <EnrollmentPage />}
-        {activeTab === 'results'     && <ResultsPage />}
-        {activeTab === 'mastersheet' && <MastersheetPage />}
-        {activeTab === 'promotion'  && <PromotionPage />}
-        {activeTab === 'classlist'  && <ClassListPage />}
-        {activeTab === 'reportcard' && <ReportCardPage />}
-        {activeTab === 'workload'    && <WorkloadPage />}
-        {activeTab === 'schools' && user?.role === 'super_admin' && <SuperAdminSchools />}
-        {activeTab === 'school'  && user?.role !== 'super_admin' && <SchoolProfile />}
-
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
-
-export default DashboardPage;

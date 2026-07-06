@@ -25,8 +25,8 @@ function DashboardSummary() {
       }
 
       setCounts({
-        students: studentsRes.data?.pagination?.total_items ?? 0,
-        staff: staffRes.data?.pagination?.total_items ?? 0
+        students: studentsRes.pagination?.total_items ?? 0,
+        staff: staffRes.pagination?.total_items ?? 0
       });
       setLoading(false);
     };
