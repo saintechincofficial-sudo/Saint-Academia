@@ -351,7 +351,116 @@ export default function WorkloadPage() {
           ))}
 
           {/* ── CLASS VIEW ── */}
-          {viewMode === 'class' && classData.map(cls => (
+          {viewMode === 'class' && classId > 0 && (() => {
+            // Show ALL subjects, with teacher if assigned
+            const assignedMap = {};
+            classData.forEach(cls => {
+              if (String(cls.class_id) === String(classId)) {
+                cls.assignments.forEach(a => { assignedMap[a.subject_id] = a; });
+              }
+            });
+            const cls = classData.find(c => String(c.class_id) === String(classId));
+            const clsName = filteredClasses.find(c => String(c.id) === String(classId));
+            return (
+              <div className="wl-teacher-block">
+                <div className="wl-teacher-header">
+                  <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                    <strong style={{ fontSize:14 }}>{clsName?.name} {clsName?.stream||''} — Subject Assignments</strong>
+                    <span className="wl-staff-num">
+                      {Object.keys(assignedMap).length}/{subjects.length} subjects assigned
+                    </span>
+                  </div>
+                  {cls && <div className="wl-totals">
+                    <span>{cls.total_periods} periods/week</span>
+                    <span>{cls.total_periods * 36} annual</span>
+                  </div>}
+                </div>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Subject</th>
+                      <th>Coef</th>
+                      <th>Assigned Teacher</th>
+                      <th>Periods/Week</th>
+                      <th>Annual</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...subjects].sort((a,b)=>a.name.localeCompare(b.name)).map(subj => {
+                      const assigned = assignedMap[subj.id];
+                      return (
+                        <tr key={subj.id} style={{ background: assigned ? '#fff' : '#fffbf0' }}>
+                          <td><strong>{subj.name}</strong></td>
+                          <td><span className="coef-badge">×{subj.coefficient}</span></td>
+                          <td>
+                            {assigned
+                              ? <span style={{ color:'#1B2A4A', fontWeight:600 }}>{assigned.teacher_name}</span>
+                              : (
+                                <select
+                                  defaultValue=""
+                                  id={"staff-"+subj.id}
+                                  className="select-input"
+                                  style={{ minWidth:180, fontSize:12, padding:'5px 8px' }}>
+                                  <option value="">— Assign teacher —</option>
+                                  {[...staff].sort((a,b)=>a.last_name.localeCompare(b.last_name)).map(s => (
+                                    <option key={s.id} value={s.id}>{s.last_name} {s.first_name}</option>
+                                  ))}
+                                </select>
+                              )
+                            }
+                          </td>
+                          <td>
+                            {assigned
+                              ? assigned.periods_per_week
+                              : <input type="number" min="1" max="20" defaultValue="2"
+                                  id={"periods-"+subj.id}
+                                  style={{ width:50, padding:'4px 6px', border:'1px solid #d0d8e4', borderRadius:6, textAlign:'center', fontSize:13 }} />
+                            }
+                          </td>
+                          <td>{assigned ? assigned.periods_per_week * 36 : '—'}</td>
+                          <td>
+                            {assigned
+                              ? <button className="btn-icon danger"
+                                  onClick={() => handleRemove(assigned.id, subj.name)}>🗑️</button>
+                              : <button className="btn-primary"
+                                  style={{ padding:'5px 12px', fontSize:12 }}
+                                  onClick={async () => {
+                                    const sid = document.getElementById("staff-"+subj.id)?.value;
+                                    const per = parseInt(document.getElementById("periods-"+subj.id)?.value) || 2;
+                                    if (!sid) { setError('Select a teacher first'); return; }
+                                    setSaving(true); setError('');
+                                    const res = await post('/workload', {
+                                      staff_id: parseInt(sid),
+                                      subject_id: subj.id,
+                                      class_id: parseInt(classId),
+                                      academic_year_id: parseInt(yearId),
+                                      periods_per_week: per
+                                    });
+                                    setSaving(false);
+                                    if (res.success) { setMessage('Assigned!'); loadWorkload(yearId); }
+                                    else setError(res.message);
+                                  }}>
+                                  Assign
+                                </button>
+                            }
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
+
+          {viewMode === 'class' && !classId && (
+            <div className="empty-panel">
+              <p>Select a class above to view and manage its subject assignments.</p>
+            </div>
+          )}
+
+          {viewMode === 'class' && false && classData.map(cls => (
             <div key={cls.class_id} className="wl-teacher-block">
               <div className="wl-teacher-header">
                 <div style={{ display:'flex', alignItems:'center', gap:10 }}>
