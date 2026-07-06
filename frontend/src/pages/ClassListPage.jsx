@@ -69,7 +69,7 @@ export default function ClassListPage() {
       });
       const imgData = canvas.toDataURL('image/png');
       const margin = 8;
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const pdfW = pdf.internal.pageSize.getWidth()  - margin * 2;
       const pdfH = pdf.internal.pageSize.getHeight() - margin * 2;
       const ratio   = pdfW / canvas.width;
