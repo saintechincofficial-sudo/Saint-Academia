@@ -137,18 +137,11 @@ export default function SuperAdminSchools({ onEnterSchool }) {
     } else setError(res.message);
     setToggling(null);
   };
-
-  const filtered = schools.filter(s =>
-    !search || s.name.toLowerCase().includes(search.toLowerCase()) || (s.region||'').toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = schools.filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()) || (s.region||``).toLowerCase().includes(search.toLowerCase()));
 
   const totalStudents = schools.reduce((n, s) => n + (parseInt(s.student_count)||0), 0);
   const totalStaff    = schools.reduce((n, s) => n + (parseInt(s.staff_count)||0), 0);
   const activeSchools = schools.filter(s => s.is_active).length;
-
-    } else setError(res.message);
-  };
-
   return (
     <div className="tab-content">
       {/* Header */}
