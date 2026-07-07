@@ -118,7 +118,11 @@ class SchoolController
     {
         try {
             Auth::check();
-            $schoolId = TenantContext::requireSchoolId();
+            // SuperAdmin can update any school via /schools/:id
+            // School admin updates their own school via /schools/me
+            $schoolId = isset($_GET['id']) && is_numeric($_GET['id'])
+                ? (int) $_GET['id']
+                : TenantContext::requireSchoolId();
 
             // Parse body (handles both JSON and multipart PUT)
             $body = self::parseMultipartPut();

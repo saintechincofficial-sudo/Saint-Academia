@@ -18,6 +18,8 @@ export function useApi() {
     };
 
     if (token) headers['Authorization'] = `Bearer ${token}`;
+    const ctxSchool = localStorage.getItem('context_school_id');
+    if (ctxSchool) headers['X-School-Context'] = ctxSchool;
 
     try {
       const response = await fetch(url, { ...options, headers });

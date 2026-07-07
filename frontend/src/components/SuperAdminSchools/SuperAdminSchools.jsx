@@ -10,15 +10,82 @@ const VIEWS = [
 ];
 
 function StatPill({ label, value, color }) {
+  const openEdit = (school) => {
+    setEditSchool(school);
+    setEditForm({ name: school.name, name_fr: school.name_fr||"", address: school.address||"", phone: school.phone||"", email: school.email||"", region: school.region||"", motto: school.motto||"" });
+  };
+
+  const saveEdit = async (e) => {
+    e.preventDefault();
+    setEditSaving(true); setError("");
+    const res = await apiCall("/schools/" + editSchool.id, { method:"PUT", body: JSON.stringify(editForm) });
+    setEditSaving(false);
+    if (res.success) {
+      setSchools(p => p.map(s => s.id === editSchool.id ? { ...s, ...editForm } : s));
+      setEditSchool(null);
+      setMessage("School updated successfully.");
+    } else setError(res.message);
+  };
+
   return (
     <div style={{ textAlign:'center', minWidth:60 }}>
       <div style={{ fontSize:20, fontWeight:800, color, lineHeight:1 }}>{value}</div>
       <div style={{ fontSize:10, color:'#888', marginTop:2, textTransform:'uppercase', letterSpacing:'0.5px' }}>{label}</div>
+    {/* Edit School Modal */}
+    {editSchool && (
+      <div style={{ position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:600,display:"flex",alignItems:"center",justifyContent:"center" }}>
+        <div style={{ background:"#fff",borderRadius:14,padding:28,width:520,maxWidth:"90vw",maxHeight:"90vh",overflowY:"auto" }}>
+          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20 }}>
+            <h3 style={{ margin:0,fontSize:16,fontWeight:700,color:"#1B2A4A" }}>Edit School</h3>
+            <button onClick={() => setEditSchool(null)} style={{ background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#888" }}>x</button>
+          </div>
+          <form onSubmit={saveEdit}>
+            <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:16 }}>
+              <div className="form-group" style={{ gridColumn:"1/-1" }}>
+                <label>School Name (English) *</label>
+                <input value={editForm.name} onChange={e=>setEditForm(p=>({...p,name:e.target.value}))} required />
+              </div>
+              <div className="form-group">
+                <label>School Name (French)</label>
+                <input value={editForm.name_fr} onChange={e=>setEditForm(p=>({...p,name_fr:e.target.value}))} />
+              </div>
+              <div className="form-group">
+                <label>Region</label>
+                <select value={editForm.region} onChange={e=>setEditForm(p=>({...p,region:e.target.value}))} className="select-input">
+                  <option value="">- Select -</option>
+                  {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Phone</label>
+                <input value={editForm.phone} onChange={e=>setEditForm(p=>({...p,phone:e.target.value}))} />
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input type="email" value={editForm.email} onChange={e=>setEditForm(p=>({...p,email:e.target.value}))} />
+              </div>
+              <div className="form-group">
+                <label>Address</label>
+                <input value={editForm.address} onChange={e=>setEditForm(p=>({...p,address:e.target.value}))} />
+              </div>
+              <div className="form-group" style={{ gridColumn:"1/-1" }}>
+                <label>Motto</label>
+                <input value={editForm.motto} onChange={e=>setEditForm(p=>({...p,motto:e.target.value}))} />
+              </div>
+            </div>
+            <div style={{ display:"flex",gap:10,justifyContent:"flex-end" }}>
+              <button type="button" className="btn-secondary" onClick={() => setEditSchool(null)}>Cancel</button>
+              <button type="submit" className="btn-primary" disabled={editSaving}>{editSaving?"Saving...":"Save Changes"}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
     </div>
   );
 }
 
-export default function SuperAdminSchools() {
+export default function SuperAdminSchools({ onEnterSchool }) {
   const { get, post, apiCall } = useApi();
   const [schools,  setSchools]  = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -27,7 +94,10 @@ export default function SuperAdminSchools() {
   const [message,  setMessage]  = useState('');
   const [error,    setError]    = useState('');
   const [saving,   setSaving]   = useState(false);
-  const [toggling, setToggling] = useState(null);
+  const [toggling,   setToggling]   = useState(null);
+  const [editSchool, setEditSchool] = useState(null);
+  const [editForm,   setEditForm]   = useState({});
+  const [editSaving, setEditSaving] = useState(false);
 
   const [form, setForm] = useState({
     name:'', name_fr:'', address:'', phone:'', email:'',
@@ -75,6 +145,9 @@ export default function SuperAdminSchools() {
   const totalStudents = schools.reduce((n, s) => n + (parseInt(s.student_count)||0), 0);
   const totalStaff    = schools.reduce((n, s) => n + (parseInt(s.staff_count)||0), 0);
   const activeSchools = schools.filter(s => s.is_active).length;
+
+    } else setError(res.message);
+  };
 
   return (
     <div className="tab-content">
@@ -156,20 +229,24 @@ export default function SuperAdminSchools() {
                     <StatPill label="Staff"    value={school.staff_count||0}   color="#2E9E4E" />
                     <StatPill label="Classes"  value={school.class_count||0}   color="#B8730A" />
                   </div>
-
                   {/* Actions */}
-                  <div style={{ display:'flex', flexDirection:'column', gap:6, minWidth:100 }}>
-                    <button onClick={() => handleToggle(school)}
-                      disabled={toggling === school.id}
-                      style={{
-                        padding:'6px 12px', border:'none', borderRadius:6, cursor:'pointer',
-                        fontSize:12, fontWeight:600, fontFamily:'inherit',
-                        background: school.is_active ? '#fef0ee' : '#edfaf1',
-                        color: school.is_active ? '#c0392b' : '#1e8449'
-                      }}>
-                      {toggling === school.id ? '…' : school.is_active ? 'Deactivate' : 'Activate'}
+                  <div style={{ display:"flex", flexDirection:"column", gap:6, minWidth:110 }}>
+                    {onEnterSchool && school.is_active && (
+                      <button onClick={() => onEnterSchool(school)}
+                        style={{padding:"6px 12px",border:"none",borderRadius:6,cursor:"pointer",fontSize:12,fontWeight:700,background:"#1B2A4A",color:"#fff",fontFamily:"inherit"}}>
+                        Enter School
+                      </button>
+                    )}
+                    <button onClick={() => openEdit(school)}
+                      style={{padding:"6px 12px",border:"1px solid #d0d8e4",borderRadius:6,cursor:"pointer",fontSize:12,background:"#fff",fontFamily:"inherit"}}>
+                      Edit
+                    </button>
+                    <button onClick={() => handleToggle(school)} disabled={toggling===school.id}
+                      style={{padding:"6px 12px",border:"none",borderRadius:6,cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit",background:school.is_active?"#fef0ee":"#edfaf1",color:school.is_active?"#c0392b":"#1e8449"}}>
+                      {toggling===school.id?"...":school.is_active?"Deactivate":"Activate"}
                     </button>
                   </div>
+
                 </div>
               ))}
               {filtered.length === 0 && <p className="empty-text">No schools found.</p>}
@@ -273,7 +350,7 @@ export default function SuperAdminSchools() {
                     <strong>{s.name}</strong>
                     {s.name_fr && <div style={{ fontSize:11, color:'#888' }}>{s.name_fr}</div>}
                   </td>
-                  <td>{s.region || '—'}</td>
+                  <td>{s.region || '-'}</td>
                   <td style={{ fontWeight:700, color:'#1E88C7' }}>{s.student_count||0}</td>
                   <td style={{ fontWeight:700, color:'#2E9E4E' }}>{s.staff_count||0}</td>
                   <td>{s.class_count||0}</td>
@@ -284,13 +361,63 @@ export default function SuperAdminSchools() {
                       {s.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td style={{ fontSize:12, color:'#888' }}>{s.created_at?.slice(0,10) || '—'}</td>
+                  <td style={{ fontSize:12, color:'#888' }}>{s.created_at?.slice(0,10) || '-'}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+    {/* Edit School Modal */}
+    {editSchool && (
+      <div style={{ position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:600,display:"flex",alignItems:"center",justifyContent:"center" }}>
+        <div style={{ background:"#fff",borderRadius:14,padding:28,width:520,maxWidth:"90vw",maxHeight:"90vh",overflowY:"auto" }}>
+          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20 }}>
+            <h3 style={{ margin:0,fontSize:16,fontWeight:700,color:"#1B2A4A" }}>Edit School</h3>
+            <button onClick={() => setEditSchool(null)} style={{ background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#888" }}>x</button>
+          </div>
+          <form onSubmit={saveEdit}>
+            <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:16 }}>
+              <div className="form-group" style={{ gridColumn:"1/-1" }}>
+                <label>School Name (English) *</label>
+                <input value={editForm.name} onChange={e=>setEditForm(p=>({...p,name:e.target.value}))} required />
+              </div>
+              <div className="form-group">
+                <label>School Name (French)</label>
+                <input value={editForm.name_fr} onChange={e=>setEditForm(p=>({...p,name_fr:e.target.value}))} />
+              </div>
+              <div className="form-group">
+                <label>Region</label>
+                <select value={editForm.region} onChange={e=>setEditForm(p=>({...p,region:e.target.value}))} className="select-input">
+                  <option value="">- Select -</option>
+                  {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Phone</label>
+                <input value={editForm.phone} onChange={e=>setEditForm(p=>({...p,phone:e.target.value}))} />
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input type="email" value={editForm.email} onChange={e=>setEditForm(p=>({...p,email:e.target.value}))} />
+              </div>
+              <div className="form-group">
+                <label>Address</label>
+                <input value={editForm.address} onChange={e=>setEditForm(p=>({...p,address:e.target.value}))} />
+              </div>
+              <div className="form-group" style={{ gridColumn:"1/-1" }}>
+                <label>Motto</label>
+                <input value={editForm.motto} onChange={e=>setEditForm(p=>({...p,motto:e.target.value}))} />
+              </div>
+            </div>
+            <div style={{ display:"flex",gap:10,justifyContent:"flex-end" }}>
+              <button type="button" className="btn-secondary" onClick={() => setEditSchool(null)}>Cancel</button>
+              <button type="submit" className="btn-primary" disabled={editSaving}>{editSaving?"Saving...":"Save Changes"}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
     </div>
   );
 }

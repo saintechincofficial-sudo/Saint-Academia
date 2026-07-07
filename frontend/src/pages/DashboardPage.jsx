@@ -67,7 +67,9 @@ const NAV_GROUPS = [
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const [activeTab,    setActiveTab]    = useState('overview');
-  const [sidebarOpen,  setSidebarOpen]  = useState(true);
+  const [sidebarOpen,     setSidebarOpen]     = useState(true);
+  const [contextSchoolId, setContextSchoolId] = useState(null);
+  const [contextSchool,   setContextSchool]   = useState(null);
   const [showStudentForm,  setShowStudentForm]  = useState(false);
   const [editingStudent,   setEditingStudent]   = useState(null);
   const [studentRefresh,   setStudentRefresh]   = useState(0);
@@ -83,9 +85,15 @@ export default function DashboardPage() {
   const userRoles = Array.isArray(user?.roles) ? user.roles : [user?.role].filter(Boolean);
   const hasRole   = (required) => required.some(r => userRoles.includes(r));
 
+  const isSuperAdmin = userRoles.includes('super_admin') && !contextSchoolId;
+
   const visibleGroups = NAV_GROUPS.map(g => ({
     ...g,
-    items: g.items.filter(i => hasRole(i.roles))
+    items: g.items.filter(i => {
+      // Super admin without school context only sees Schools tab
+      if (isSuperAdmin) return i.id === 'schools';
+      return hasRole(i.roles);
+    })
   })).filter(g => g.items.length > 0);
 
   const activeItem = allItems.find(i => i.id === activeTab);
@@ -112,6 +120,15 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {contextSchool && (
+        <div style={{ background:'#B8730A', color:'#fff', padding:'8px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:13 }}>
+          <span>Viewing school: <strong>{contextSchool.name}</strong></span>
+          <button onClick={() => { setContextSchoolId(null); setContextSchool(null); setActiveTab('schools'); }}
+            style={{ background:'rgba(255,255,255,0.2)', border:'none', color:'#fff', padding:'4px 12px', borderRadius:6, cursor:'pointer', fontSize:12, fontWeight:600 }}>
+            Exit School View
+          </button>
+        </div>
+      )}
       <div className="app-body">
 
         {/* Sidebar */}
@@ -201,7 +218,15 @@ export default function DashboardPage() {
             {activeTab === 'classlist'   && <ClassListPage />}
             {activeTab === 'promotion'   && <PromotionPage />}
             {activeTab === 'school'  && user?.role !== 'super_admin' && <SchoolProfile />}
-            {activeTab === 'schools' && user?.role === 'super_admin'  && <SuperAdminSchools />}
+            {activeTab === 'schools' && user?.role === 'super_admin' && !contextSchoolId && (
+              <SuperAdminSchools
+                onEnterSchool={(school) => {
+                  setContextSchoolId(school.id);
+                  setContextSchool(school);
+                  setActiveTab('overview');
+                }}
+              />
+            )}
 
           </div>
         </main>
