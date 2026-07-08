@@ -20,6 +20,7 @@ import PromotionPage from './PromotionPage';
 import ClassListPage from './ClassListPage';
 import ReportCardPage from './ReportCardPage';
 import WorkloadPage from './WorkloadPage';
+import IDCardPage from './IDCardPage';
 import './DashboardPage.css';
 
 const NAV_GROUPS = [
@@ -53,6 +54,7 @@ const NAV_GROUPS = [
       { id:'reportcard',  label:'Report Cards', Icon:FileText,        roles:['super_admin','school_admin','principal'] },
       { id:'classlist',   label:'Class List',   Icon:List,            roles:['super_admin','school_admin','principal','vice_principal','dean','discipline_master','hod','class_master'] },
       { id:'promotion',   label:'Promotion',    Icon:GraduationCap,   roles:['super_admin','school_admin'] },
+      { id:'idcards',     label:'ID Cards',     Icon:Users,           roles:['school_admin','principal'] },
     ]
   },
   {
@@ -217,6 +219,7 @@ export default function DashboardPage() {
             {activeTab === 'reportcard'  && <ReportCardPage />}
             {activeTab === 'classlist'   && <ClassListPage />}
             {activeTab === 'promotion'   && <PromotionPage />}
+            {activeTab === 'idcards'     && <IDCardPage />}
             {activeTab === 'school'  && user?.role !== 'super_admin' && <SchoolProfile />}
             {activeTab === 'schools' && user?.role === 'super_admin' && !contextSchoolId && (
               <SuperAdminSchools
