@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApi } from '../hooks/useApi';
+import { useAuth } from '../hooks/useAuth';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api','') || 'http://localhost/SaintAcademia';
 
@@ -143,7 +144,13 @@ export default function IDCardPage() {
   const { get } = useApi();
   const printRef = useRef(null);
 
-  const [tab,      setTab]      = useState('student'); // 'student' | 'staff'
+  const { user } = useAuth();
+  const userRoles = Array.isArray(user?.roles) ? user.roles : [user?.role].filter(Boolean);
+  const isSuperAdmin = userRoles.includes('super_admin');
+
+  const [schools,   setSchools]  = useState([]);
+  const [schoolId,  setSchoolId] = useState('');
+  const [tab,       setTab]      = useState('student'); // 'student' | 'staff'
   const [years,    setYears]    = useState([]);
   const [classes,  setClasses]  = useState([]);
   const [yearId,   setYearId]   = useState('');
@@ -156,7 +163,15 @@ export default function IDCardPage() {
   const [error,    setError]    = useState('');
 
   useEffect(() => {
-    get('/schools/me').then(r => { if (r.success) setSchool(r.school); });
+    if (isSuperAdmin) {
+      get('/schools').then(r => { if (r.success) setSchools(r.schools || []); });
+    } else {
+      get('/schools/me').then(r => { if (r.success) setSchool(r.school); });
+    }
+    if (isSuperAdmin && schoolId) {
+      // fetch school profile for selected school
+      get('/schools/' + schoolId).then(r => { if (r.success) setSchool(r.school); });
+    }
     get('/classes').then(r => {
       if (!r.success) return;
       const all = r.classes || [];
@@ -210,6 +225,18 @@ export default function IDCardPage() {
       </div>
 
       {/* Filters */}
+      {isSuperAdmin && (
+        <div className="filter-bar no-print" style={{ marginBottom:0 }}>
+          <div className="form-group">
+            <label>School</label>
+            <select value={schoolId} onChange={e => { setSchoolId(e.target.value); setStudents([]); setYearId(''); setClassId(''); }}
+              className="select-input">
+              <option value="">— Select school —</option>
+              {schools.filter(s => s.is_active).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+        </div>
+      )}
       {tab === 'student' && (
         <div className="filter-bar no-print">
           <div className="form-group">
