@@ -93,7 +93,7 @@ export default function DashboardPage() {
     ...g,
     items: g.items.filter(i => {
       // Super admin without school context only sees Schools tab
-      if (isSuperAdmin) return i.id === 'schools';
+      if (isSuperAdmin) return i.id === 'schools' || i.id === 'idcards';
       return hasRole(i.roles);
     })
   })).filter(g => g.items.length > 0);
