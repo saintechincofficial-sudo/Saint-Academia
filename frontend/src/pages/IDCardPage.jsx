@@ -168,10 +168,6 @@ export default function IDCardPage() {
     } else {
       get('/schools/me').then(r => { if (r.success) setSchool(r.school); });
     }
-    if (isSuperAdmin && schoolId) {
-      // fetch school profile for selected school
-      get('/schools/' + schoolId).then(r => { if (r.success) setSchool(r.school); });
-    }
     get('/classes').then(r => {
       if (!r.success) return;
       const all = r.classes || [];
@@ -229,7 +225,29 @@ export default function IDCardPage() {
         <div className="filter-bar no-print" style={{ marginBottom:0 }}>
           <div className="form-group">
             <label>School</label>
-            <select value={schoolId} onChange={e => { setSchoolId(e.target.value); setStudents([]); setYearId(''); setClassId(''); }}
+            <select value={schoolId} onChange={e => {
+                const sid = e.target.value;
+                setSchoolId(sid);
+                setStudents([]); setYearId(''); setClassId(''); setYears([]); setClasses([]);
+                if (sid) {
+                  localStorage.setItem('context_school_id', sid);
+                  get('/schools/' + sid).then(r => { if (r.success) setSchool(r.school); });
+                  get('/classes').then(r => {
+                    if (!r.success) return;
+                    const all = r.classes || [];
+                    setClasses(all);
+                    const seen = new Set(); const uy = [];
+                    all.forEach(c => {
+                      const id = c.academic_year_id || c.year_id;
+                      if (id && !seen.has(id)) { seen.add(id); uy.push({ id, label: c.academic_year }); }
+                    });
+                    setYears(uy);
+                  });
+                  get('/staff?limit=200').then(r => { if (r.success) setStaffAll(r.staff || []); });
+                } else {
+                  localStorage.removeItem('context_school_id');
+                }
+              }}
               className="select-input">
               <option value="">— Select school —</option>
               {schools.filter(s => s.is_active).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
