@@ -164,6 +164,8 @@ export default function IDCardPage() {
 
   useEffect(() => {
     if (isSuperAdmin) {
+      // Load schools list without school context
+      localStorage.removeItem('context_school_id');
       get('/schools').then(r => { if (r.success) setSchools(r.schools || []); });
     } else {
       get('/schools/me').then(r => { if (r.success) setSchool(r.school); });
