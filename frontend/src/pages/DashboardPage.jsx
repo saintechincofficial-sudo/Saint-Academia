@@ -22,7 +22,6 @@ import ReportCardPage from './ReportCardPage';
 import WorkloadPage from './WorkloadPage';
 import IDCardPage from './IDCardPage';
 import AcademicYearPage from './AcademicYearPage';
-import AcademicYearPage from './AcademicYearPage';
 import './DashboardPage.css';
 
 const NAV_GROUPS = [
