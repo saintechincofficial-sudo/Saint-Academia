@@ -168,18 +168,20 @@ export default function IDCardPage() {
     } else {
       get('/schools/me').then(r => { if (r.success) setSchool(r.school); });
     }
-    get('/classes').then(r => {
-      if (!r.success) return;
-      const all = r.classes || [];
-      setClasses(all);
-      const seen = new Set(); const uy = [];
-      all.forEach(c => {
-        const id = c.academic_year_id || c.year_id;
-        if (id && !seen.has(id)) { seen.add(id); uy.push({ id, label: c.academic_year }); }
+    if (!isSuperAdmin) {
+      get('/classes').then(r => {
+        if (!r.success) return;
+        const all = r.classes || [];
+        setClasses(all);
+        const seen = new Set(); const uy = [];
+        all.forEach(c => {
+          const id = c.academic_year_id || c.year_id;
+          if (id && !seen.has(id)) { seen.add(id); uy.push({ id, label: c.academic_year }); }
+        });
+        setYears(uy);
       });
-      setYears(uy);
-    });
-    get('/staff?limit=200').then(r => { if (r.success) setStaffAll(r.staff || []); });
+      get('/staff?limit=200').then(r => { if (r.success) setStaffAll(r.staff || []); });
+    }
   }, []);
 
   const filteredClasses = yearId
