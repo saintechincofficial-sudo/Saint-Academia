@@ -370,5 +370,16 @@ if ($resource === 'workload') {
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405); return;
 }
 
+// ── Academic Year routes ──────────────────────────────────
+require_once __DIR__ . '/controllers/AcademicYearController.php';
+if ($resource === 'academic-years') {
+    if ($method === 'GET' && isset($segments[1]) && $segments[1] === 'set-current') {
+        Response::json(AcademicYearController::setCurrent()); return;
+    }
+    if ($method === 'GET')  { Response::json(AcademicYearController::index());  return; }
+    if ($method === 'POST') { Response::json(AcademicYearController::create()); return; }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405); return;
+}
+
 // Catch-all - must be last
 Response::json(['success' => false, 'message' => 'Route not found'], 404);
