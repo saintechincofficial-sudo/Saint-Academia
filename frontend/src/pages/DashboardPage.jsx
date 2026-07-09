@@ -141,7 +141,7 @@ export default function DashboardPage() {
               {group.items.map(({ id, label, Icon }) => (
                 <button key={id}
                   className={`nav-item ${activeTab === id ? 'active' : ''}`}
-                  onClick={() => setActiveTab(id)}
+                  onClick={() => { if (activeTab === 'idcards' && id !== 'idcards' && isSuperAdmin) localStorage.removeItem('context_school_id'); setActiveTab(id); }}
                   title={!sidebarOpen ? label : undefined}>
                   <span className="nav-icon"><Icon size={17} strokeWidth={1.8}/></span>
                   {sidebarOpen && <span className="nav-label">{label}</span>}
