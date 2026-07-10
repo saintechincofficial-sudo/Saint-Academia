@@ -381,5 +381,16 @@ if ($resource === 'academic-years') {
     Response::json(['success' => false, 'message' => 'Method not allowed'], 405); return;
 }
 
+// ── Academic Year Catalog routes (superadmin global catalog) ──
+if ($resource === 'academic-year-catalog') {
+    if ($method === 'GET')  { Response::json(AcademicYearController::listCatalog());       return; }
+    if ($method === 'POST') { Response::json(AcademicYearController::createCatalogYear()); return; }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405); return;
+}
+// ── Academic Year Adopt route ──────────────────────────────
+if ($resource === 'academic-year-adopt') {
+    if ($method === 'POST') { Response::json(AcademicYearController::adopt()); return; }
+    Response::json(['success' => false, 'message' => 'Method not allowed'], 405); return;
+}
 // Catch-all - must be last
 Response::json(['success' => false, 'message' => 'Route not found'], 404);
