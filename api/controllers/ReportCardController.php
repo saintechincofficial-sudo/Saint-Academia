@@ -46,18 +46,15 @@ class ReportCardController
             $pdo      = getDatabaseConnection();
             $schoolId = SchoolHelper::resolveSchoolId($pdo);
 
-            // School
             $stmt = $pdo->prepare('SELECT * FROM schools WHERE id = ?');
             $stmt->execute([$schoolId]);
             $school = $stmt->fetch();
 
-            // Student
             $stmt = $pdo->prepare('SELECT * FROM students WHERE id = ? AND school_id = ?');
             $stmt->execute([$studentId, $schoolId]);
             $student = $stmt->fetch();
             if (!$student) return ['success' => false, 'message' => 'Student not found'];
 
-            // Class with teacher
             $stmt = $pdo->prepare(
                 'SELECT c.*, cl.name AS level_name,
                         CONCAT(st.first_name, " ", st.last_name) AS teacher_name
@@ -70,31 +67,26 @@ class ReportCardController
             $class = $stmt->fetch();
             if (!$class) return ['success' => false, 'message' => 'Class not found'];
 
-            // Academic year
             $stmt = $pdo->prepare('SELECT * FROM academic_years WHERE id = ? AND school_id = ?');
             $stmt->execute([$academicYearId, $schoolId]);
             $year = $stmt->fetch();
             if (!$year) return ['success' => false, 'message' => 'Academic year not found'];
 
-            // Term
             $stmt = $pdo->prepare('SELECT * FROM terms WHERE id = ?');
             $stmt->execute([$termId]);
             $term = $stmt->fetch();
             if (!$term) return ['success' => false, 'message' => 'Term not found'];
 
-            // Sequences for this term
             $seqMap    = [1 => [1,2], 2 => [3,4], 3 => [5,6]];
             $sequences = $seqMap[$term['term_number']] ?? [1,2];
             $seq1Num   = $sequences[0];
             $seq2Num   = $sequences[1];
 
-            // Subjects
             $stmt = $pdo->prepare('SELECT * FROM subjects WHERE school_id = ? ORDER BY name');
             $stmt->execute([$schoolId]);
             $subjects = $stmt->fetchAll();
             $totalCoeff = array_sum(array_column($subjects, 'coefficient'));
 
-            // Get results for this student - both sequences
             $stmt = $pdo->prepare(
                 'SELECT subject_id, sequence, AVG(score) AS score
                  FROM exam_results
@@ -105,13 +97,11 @@ class ReportCardController
             $stmt->execute([$studentId, $classId, $schoolId, $seq1Num, $seq2Num]);
             $rawResults = $stmt->fetchAll();
 
-            // Map: [subject_id][sequence] = score
             $scoreMap = [];
             foreach ($rawResults as $r) {
                 $scoreMap[$r['subject_id']][$r['sequence']] = round((float)$r['score'], 2);
             }
 
-            // Get per-subject positions for all students in this class
             $stmt = $pdo->prepare(
                 'SELECT er.student_id, er.subject_id,
                         AVG(er.score) AS avg_score
@@ -141,7 +131,6 @@ class ReportCardController
                 }
             }
 
-            // Get teacher assignments per subject
             $teacherMap = [];
             try {
                 $stmt = $pdo->prepare(
@@ -159,7 +148,6 @@ class ReportCardController
                 // Table may not exist yet, skip
             }
 
-            // Build subject rows
             $subjectRows  = [];
             $totalPoints  = 0.0;
             $subjectsSat  = 0;
@@ -243,7 +231,6 @@ class ReportCardController
                 }
             }
 
-            // Previous terms averages
             $prevTerms = [];
             $allTerms  = [
                 ['term_number' => 1, 'seq' => [1,2]],
@@ -293,13 +280,11 @@ class ReportCardController
                 }
             }
 
-            // Per-term academic work labels (for STUDENT'S/CLASS PERFORMANCE section)
             $termAcademicWork = [];
             foreach ($prevTerms as $tNum => $tAvg) {
                 $termAcademicWork[$tNum] = $tAvg !== null ? self::academicWork((float)$tAvg) : '-';
             }
 
-            // Attendance
             $attStmt = $pdo->prepare(
                 'SELECT
                     SUM(CASE WHEN ar.status="present" THEN 1 ELSE 0 END) AS present,
@@ -352,7 +337,7 @@ class ReportCardController
         }
     }
 
-    // Class overview - list all students with their term averages
+    // Class overview - list all students, ordered by merit (highest average first)
     public static function classOverview(): array
     {
         try {
@@ -389,7 +374,7 @@ class ReportCardController
                  WHERE se.class_id = ? AND se.academic_year_id = ?
                    AND se.school_id = ? AND se.status = 'active'
                  GROUP BY s.id
-                 ORDER BY s.last_name, s.first_name"
+                 ORDER BY avg DESC, s.last_name, s.first_name"
             );
             $stmt->execute([$classId, $academicYearId, $schoolId]);
             $students = $stmt->fetchAll();
@@ -402,6 +387,7 @@ class ReportCardController
 
     }
 
+    // Generate all report cards for a class, ordered by merit (highest average first)
     public static function generateAll(): array
     {
         try {
@@ -417,12 +403,27 @@ class ReportCardController
             $pdo      = getDatabaseConnection();
             $schoolId = SchoolHelper::resolveSchoolId($pdo);
 
+            $stmt = $pdo->prepare('SELECT term_number FROM terms WHERE id = ?');
+            $stmt->execute([$termId]);
+            $term      = $stmt->fetch();
+            $seqMap    = [1 => [1,2], 2 => [3,4], 3 => [5,6]];
+            $sequences = $seqMap[$term['term_number'] ?? 1] ?? [1,2];
+            $seqIn     = implode(',', $sequences);
+
             $stmt = $pdo->prepare(
-                'SELECT s.id FROM student_enrollments se
+                "SELECT s.id,
+                        ROUND(SUM(er.score * sub.coefficient) / SUM(sub.coefficient), 2) AS avg
+                 FROM student_enrollments se
                  JOIN students s ON s.id = se.student_id
+                 LEFT JOIN exam_results er ON er.student_id = se.student_id
+                                          AND er.class_id   = se.class_id
+                                          AND er.school_id  = se.school_id
+                                          AND er.sequence IN ($seqIn)
+                 LEFT JOIN subjects sub ON sub.id = er.subject_id
                  WHERE se.class_id = ? AND se.academic_year_id = ?
-                   AND se.school_id = ? AND se.status = \'active\'
-                 ORDER BY s.last_name, s.first_name'
+                   AND se.school_id = ? AND se.status = 'active'
+                 GROUP BY s.id
+                 ORDER BY avg DESC, s.last_name, s.first_name"
             );
             $stmt->execute([$classId, $academicYearId, $schoolId]);
             $studentIds = array_column($stmt->fetchAll(), 'id');

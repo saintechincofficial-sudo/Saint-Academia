@@ -9,27 +9,52 @@ function RcCard({ rc, API_BASE, fmt }) {
   if (!rc) return null;
   const g = rc.general_avg;
   const photoPath = rc.student?.photo_path;
+  const termNum = rc.term?.term_number || 3;
+
+  const scoreClass = v => {
+    if (v === null || v === undefined || v === '') return '';
+    const n = parseFloat(v);
+    if (n < 10) return 'rc-fail';
+    if (n >= 18) return 'rc-vwa';
+    return 'rc-pass';
+  };
+  const valueClass = v => {
+    if (v === null || v === undefined || v === '') return '';
+    return parseFloat(v) < 10 ? 'rc-value-fail' : 'rc-value-pass';
+  };
+
+  const remarkClass = remark => {
+    if (!remark) return '';
+    if (remark.includes('(CNA)')) return 'rc-remark-cna';
+    if (remark.includes('(CAA)')) return 'rc-remark-caa';
+    if (remark.includes('(CVWA)')) return 'rc-remark-cvwa';
+    if (remark.includes('(CWA)')) return 'rc-remark-cwa';
+    return '';
+  };
+
   return (
     <div>
       <div className="rc-header">
         <div className="rc-letterhead">
-          <p><strong>REPUBLIC OF CAMEROON</strong></p><p>Peace - Work - Fatherland</p>
-          <p>***********</p><p>MINISTRY OF SECONDARY EDUCATION</p>
-          <p>***********</p><p>REGIONAL DELEGATION FOR SOUTH WEST</p>
-          <p>***********</p><p>DIVISIONAL DELEGATION FOR MEME</p>
-          <p>***********</p><p><strong>{rc.school?.name}</strong></p><p>***********</p>
+          <p>REPUBLIC OF CAMEROON</p><p>Peace - Work - Fatherland</p>
+          <p>*************</p><p>MINISTRY OF SECONDARY<br/>EDUCATION</p>
+          <p>*************</p><p>REGIONAL DELEGATION<br/>FOR SOUTH WEST</p>
+          <p>**********</p><p>DIVISIONAL DELEGATION<br/>FOR MEME</p>
+          <p>**********</p><p>{rc.school?.name?.toUpperCase()}</p>
+          <p>**********</p>
         </div>
         <div className="rc-logo-center">
           {rc.school?.logo_path
             ? <img src={API_BASE + rc.school.logo_path} alt="logo" className="rc-logo" />
-            : <div className="rc-logo-ph">School</div>}
+            : <div className="rc-logo-ph">School Logo</div>}
         </div>
         <div className="rc-letterhead rc-letterhead-right">
-          <p><strong>REPUBLIQUE DU CAMEROUN</strong></p><p>Paix - Travail - Patrie</p>
-          <p>***********</p><p>MINISTERE DE L'ENSEIGNEMENT SECONDAIRE</p>
-          <p>***********</p><p>DELEGATION REGIONALE DU SUD OUEST</p>
-          <p>***********</p><p>DELEGATION DEPARTEEMENTALE DE MEME</p>
-          <p>***********</p><p><strong>COLLEGE POLYVALENT</strong></p><p>***********</p>
+          <p>REPUBLIQUE DE CAMEROUN</p><p>Paix - Travail- Patrie</p>
+          <p>*************</p><p>MINISTERE DE EDUCATION<br/>L'ESEIGNEMENT SECONDAIRE</p>
+          <p>*************</p><p>DELEGATION REGIONALE<br/>DU SUD OUEST</p>
+          <p>**********</p><p>DELEGATION DEPARTEEMENTALE<br/>DE MEME</p>
+          <p>**********</p><p>COLLEGE POLYVALENT</p>
+          <p>**********</p>
         </div>
       </div>
 
@@ -41,9 +66,9 @@ function RcCard({ rc, API_BASE, fmt }) {
         <div className="rc-info-main">
           <div className="rc-info-row">
             <span className="rc-info-label">Name &amp; Surnames</span>
-            <span className="rc-info-val"><strong>{rc.student?.last_name} {rc.student?.first_name}</strong></span>
+            <span className="rc-info-val">{rc.student?.last_name} {rc.student?.first_name}</span>
             <span className="rc-info-label">Class:</span>
-            <span className="rc-info-val"><strong>{rc.class?.name}</strong></span>
+            <span className="rc-info-val">{rc.class?.name}</span>
           </div>
           <div className="rc-info-row">
             <span className="rc-info-label">Date of Birth :</span>
@@ -58,11 +83,15 @@ function RcCard({ rc, API_BASE, fmt }) {
             <span className="rc-info-val">{rc.class_size}</span>
           </div>
           <div className="rc-info-row">
-            <span className="rc-info-label">SEX</span>
+            <span className="rc-info-label">SEX/SEXE</span>
             <span className="rc-info-val">{rc.student?.gender || ''}</span>
             <span className="rc-info-label">STUDENT ID</span>
             <span className="rc-info-val">{rc.student?.local_id || rc.student?.student_number}</span>
           </div>
+        </div>
+        {/* QR placeholder — swap for real generated QR once verification system is built */}
+        <div className="rc-qr-box">
+          <div className="rc-qr-ph">QR</div>
         </div>
         <div className="rc-info-photo">
           {photoPath
@@ -74,76 +103,133 @@ function RcCard({ rc, API_BASE, fmt }) {
       <table className="rc-table">
         <thead>
           <tr>
-            <th className="rc-subj-col">SUBJECTS/DISCIPLINES</th>
-            <th className="rc-score">{rc.seq_labels?.[0] || 'S1'}/20</th>
-            <th className="rc-score">{rc.seq_labels?.[1] || 'S2'}/20</th>
-            <th className="rc-score">Term(M)/20</th>
-            <th className="rc-coef">Coef(C)</th>
-            <th className="rc-total">Total(MxC)</th>
-            <th className="rc-pos">Position</th>
-            <th className="rc-remark">Remark</th>
-            <th className="rc-teacher">Teacher's Name</th>
+            <th className="rc-subj-col">SUBJECTS</th>
+            <th>{rc.seq_labels?.[0] || 'S1'}/20</th>
+            <th>{rc.seq_labels?.[1] || 'S2'}/20</th>
+            <th>Term<br/>Avg/20</th>
+            <th>Coef</th>
+            <th>Total(MxC)</th>
+            <th>Position</th>
+            <th>Remark</th>
+            <th>Teacher's Name</th>
           </tr>
         </thead>
         <tbody>
-          {rc.subjects?.map((s, i) => (
-            <tr key={s.subject_id} className={i%2===0?'rc-even':'rc-odd'}>
+          {rc.subjects?.map(s => (
+            <tr key={s.subject_id}>
               <td className="rc-subj-name">
-                <strong>{s.name}</strong>
+                {s.name}
                 {s.name_fr ? <span className="rc-fr"> / {s.name_fr}</span> : ''}
               </td>
-              <td className={'rc-num ' + (s.seq1 !== null && parseFloat(s.seq1) < 10 ? 'rc-fail' : 'rc-pass')}>{s.seq1 ?? ''}</td>
-              <td className={'rc-num ' + (s.seq2 !== null && parseFloat(s.seq2) < 10 ? 'rc-fail' : 'rc-pass')}>{s.seq2 ?? ''}</td>
-              <td className={'rc-num ' + (s.term_avg !== null && parseFloat(s.term_avg) < 10 ? 'rc-fail' : 'rc-pass')}><strong>{s.term_avg ?? ''}</strong></td>
-              <td className="rc-num">{s.coefficient}</td>
-              <td className={'rc-num rc-total-cell ' + (s.total !== null && parseFloat(s.total) < parseFloat(s.coefficient)*10 ? 'rc-fail' : '')}>{s.total ?? ''}</td>
-              <td className="rc-num">{s.position || ''}</td>
-              <td className="rc-remark-cell">{s.remark}</td>
+              <td className={scoreClass(s.seq1)}>{s.seq1 ?? ''}</td>
+              <td className={scoreClass(s.seq2)}>{s.seq2 ?? ''}</td>
+              <td className={scoreClass(s.term_avg)}>{s.term_avg ?? ''}</td>
+              <td>{s.coefficient}</td>
+              <td>{s.total ?? ''}</td>
+              <td>{s.position || ''}</td>
+              <td className={'rc-remark-cell ' + remarkClass(s.remark)}>{s.remark}</td>
               <td className="rc-teacher-cell">{s.teacher || ''}</td>
             </tr>
           ))}
           <tr className="rc-totals-row">
-            <td></td><td></td><td></td><td></td>
-            <td className="rc-num"><strong>{rc.total_coeff}</strong></td>
-            <td className="rc-num rc-total-cell"><strong>{rc.total_points}</strong></td>
-            <td></td><td></td><td></td>
+            <td colSpan="3"></td>
+            <td>{rc.total_coeff}</td>
+            <td>{rc.total_points}</td>
+            <td colSpan="4"></td>
           </tr>
         </tbody>
       </table>
 
       <div className="rc-perf-grid">
-        <div className="rc-perf-col">
-          <div className="rc-perf-header">Student's / Class Performance</div>
-          <div className="rc-perf-item"><span className="rc-perf-label">First Term Average</span><span className="rc-perf-val">{rc.term_averages?.[1] ?? '-'}</span></div>
-          <div className="rc-perf-item"><span className="rc-perf-label">Second Term Average</span><span className="rc-perf-val">{rc.term_averages?.[2] ?? '-'}</span></div>
-          <div className="rc-perf-item"><span className="rc-perf-label">Third Term Average</span><span className="rc-perf-val">{rc.term_averages?.[3] ?? '-'}</span></div>
-          <div className="rc-perf-item"><span className="rc-perf-label">Annual Average</span><span className="rc-perf-val">{rc.annual_avg ?? '-'}</span></div>
-          <div className="rc-perf-item"><span className="rc-perf-label">Annual Position</span><span className="rc-perf-val">{rc.annual_position ? `${rc.annual_position}/${rc.class_size}` : '-'}</span></div>
-          <div className="rc-perf-item"><span className="rc-perf-label">Appreciation</span><span className="rc-perf-val">{rc.appreciation}</span></div>
+        <div className="rc-perf-left">
+          <table className="rc-summary-table">
+            <tbody>
+              <tr><th colSpan="4" style={{textAlign:'left'}}>STUDENT'S / CLASS PERFORMANCE</th></tr>
+              <tr>
+                <td className="rc-label-cell">First Term Average</td>
+                <td className={'rc-value-cell ' + valueClass(rc.term_averages?.[1])}>{rc.term_averages?.[1] ?? '-'}</td>
+                <td className="rc-label-cell">Highest Avg</td>
+                <td className="rc-value-small">{rc.highest_avg ?? '-'}</td>
+              </tr>
+              {termNum >= 2 && (
+                <tr>
+                  <td className="rc-label-cell">Second Term Average</td>
+                  <td className={'rc-value-cell ' + valueClass(rc.term_averages?.[2])}>{rc.term_averages?.[2] ?? '-'}</td>
+                  <td className="rc-label-cell">Lowest Avg</td>
+                  <td className="rc-value-small">{rc.lowest_avg ?? '-'}</td>
+                </tr>
+              )}
+              {termNum >= 3 && (
+                <tr>
+                  <td className="rc-label-cell">Third Term Average</td>
+                  <td className={'rc-value-cell ' + valueClass(rc.term_averages?.[3])}>{rc.term_averages?.[3] ?? '-'}</td>
+                  <td className="rc-label-cell">Class Avg</td>
+                  <td className="rc-value-small">{rc.class_avg ?? '-'}</td>
+                </tr>
+              )}
+              {termNum >= 3 && (
+                <tr>
+                  <td className="rc-label-cell">Annual Average</td>
+                  <td className={'rc-value-cell ' + valueClass(rc.annual_avg)}>{rc.annual_avg ?? '-'}</td>
+                  <td className="rc-label-cell">Subjects Sat</td>
+                  <td className="rc-value-small">{rc.subjects_sat}</td>
+                </tr>
+              )}
+              {termNum >= 3 && (
+                <tr>
+                  <td className="rc-label-cell">Annual Position</td>
+                  <td className="rc-value-small">{rc.annual_position ? `${rc.annual_position}/${rc.class_size}` : '-'}</td>
+                  <td className="rc-label-cell">Absences:</td>
+                  <td className="rc-value-small">{rc.attendance?.absent || '-'}</td>
+                </tr>
+              )}
+              <tr>
+                <td className="rc-label-cell">Appreciation</td>
+                <td colSpan="3" className="rc-appreciation-val">{rc.appreciation}</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td className="rc-label-cell">Subjects Passed</td>
+                <td className="rc-value-small">{rc.subjects_passed}</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div className="rc-perf-col">
-          <div className="rc-perf-header">Discipline</div>
-          <div className="rc-perf-item"><span className="rc-perf-label">Highest Avg</span><span className="rc-perf-val">{rc.highest_avg ?? '-'}</span></div>
-          <div className="rc-perf-item"><span className="rc-perf-label">Lowest Avg</span><span className="rc-perf-val">{rc.lowest_avg ?? '-'}</span></div>
-          <div className="rc-perf-item"><span className="rc-perf-label">Class Avg</span><span className="rc-perf-val">{rc.class_avg ?? '-'}</span></div>
-          <div className="rc-perf-item"><span className="rc-perf-label">Subjects Sat</span><span className="rc-perf-val">{rc.subjects_sat}</span></div>
-          <div className="rc-perf-item"><span className="rc-perf-label">Subjects Passed</span><span className="rc-perf-val">{rc.subjects_passed}</span></div>
-          <div className="rc-perf-item"><span className="rc-perf-label">Absences</span><span className="rc-perf-val">{rc.attendance?.absent || '-'}</span></div>
+
+        <div className="rc-perf-mid">
+          <table className="rc-summary-table">
+            <tbody>
+              <tr><th colSpan="2">DISCIPLINE</th></tr>
+              <tr><td colSpan="2">Dismissed</td></tr>
+              <tr><td colSpan="2">Warning</td></tr>
+              <tr><td colSpan="2">Serious W</td></tr>
+            </tbody>
+          </table>
         </div>
-        <div className="rc-perf-col">
-          <div className="rc-perf-header">Academic Work</div>
-          {['Distinction','Honour Roll','Credit','Pass','Below Average'].map(label => (
-            <div className="rc-perf-item" key={label}>
-              <span className="rc-perf-label">{label}</span>
-              <span className="rc-perf-val">{rc.academic_work === label ? 'X' : ''}</span>
-            </div>
-          ))}
+
+        <div className="rc-perf-right">
+          <table className="rc-summary-table">
+            <tbody>
+              <tr><th>ACADEMIC WORK</th></tr>
+              {['Distinction','Honour Roll','Credit','Pass','Below Average'].map(label => (
+                <tr key={label}><td>{label}{rc.academic_work === label ? ' — X' : ''}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="rc-class-council-box">Class Council<br/>Decision</div>
         </div>
       </div>
 
-      <div className="rc-footer-grid">
-        <div className="rc-footer-cell">Next Academic Year Resumption Date</div>
-        <div className="rc-footer-cell">Principal's Signature</div>
+      <div className="rc-sig-section">
+        <div className="rc-sig-left">
+          NEXT ACADEMIC YEAR RESUMPTION DATE
+          <div className="rc-sig-area"></div>
+        </div>
+        <div className="rc-sig-right">
+          Principal's Signature
+          <div className="rc-sig-area"></div>
+        </div>
       </div>
     </div>
   );
