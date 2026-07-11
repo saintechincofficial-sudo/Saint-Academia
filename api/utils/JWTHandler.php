@@ -1,19 +1,19 @@
 <?php
-
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-
 class JWTHandler {
     private static $secret = '';
     private static $algorithm = 'HS256';
-    
     public static function init() {
         if (empty(self::$secret)) {
             $env = self::loadEnv();
             self::$secret = $env['JWT_SECRET'] ?? 'dev-secret-key-change-in-production';
         }
     }
-    
+    public static function getSecret(): string {
+        self::init();
+        return self::$secret;
+    }
     public static function loadEnv() {
         $envFile = __DIR__ . '/../../.env';
         if (!file_exists($envFile)) {
@@ -28,7 +28,6 @@ class JWTHandler {
         }
         return $env;
     }
-    
     public static function generate($user_id, $email, $roles, $school_id = 1, $staff_id = null) {
         self::init();
         // Normalize roles to array
@@ -50,7 +49,6 @@ class JWTHandler {
         ];
         return JWT::encode($payload, self::$secret, self::$algorithm);
     }
-    
     public static function verify($token) {
         try {
             self::init();
@@ -59,16 +57,13 @@ class JWTHandler {
             return null;
         }
     }
-    
     public static function getAuthorizationHeader() {
         if (!empty($_SERVER['HTTP_AUTHORIZATION'])) {
             return trim($_SERVER['HTTP_AUTHORIZATION']);
         }
-
         if (!empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
             return trim($_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
         }
-
         if (function_exists('apache_request_headers')) {
             $headers = apache_request_headers();
             if (!empty($headers['Authorization'])) {
@@ -78,10 +73,8 @@ class JWTHandler {
                 return trim($headers['authorization']);
             }
         }
-
         return null;
     }
-
     public static function fromHeader() {
         $header = self::getAuthorizationHeader() ?? '';
         if (preg_match('/Bearer\s+(.+)/', $header, $matches)) {
@@ -89,7 +82,6 @@ class JWTHandler {
         }
         return null;
     }
-
     public static function getCurrentUser() {
         $token = self::fromHeader();
         if (!$token) return null;

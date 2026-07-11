@@ -8,6 +8,7 @@ import './ReportCardPage.css';
 function RcCard({ rc, API_BASE, fmt }) {
   if (!rc) return null;
   const g = rc.general_avg;
+  const photoPath = rc.student?.photo_path;
   return (
     <div>
       <div className="rc-header">
@@ -37,29 +38,36 @@ function RcCard({ rc, API_BASE, fmt }) {
       </div>
 
       <div className="rc-info-grid">
-        <div className="rc-info-row">
-          <span className="rc-info-label">Name &amp; Surnames</span>
-          <span className="rc-info-val"><strong>{rc.student?.last_name} {rc.student?.first_name}</strong></span>
-          <span className="rc-info-label">Class:</span>
-          <span className="rc-info-val"><strong>{rc.class?.name}</strong></span>
+        <div className="rc-info-main">
+          <div className="rc-info-row">
+            <span className="rc-info-label">Name &amp; Surnames</span>
+            <span className="rc-info-val"><strong>{rc.student?.last_name} {rc.student?.first_name}</strong></span>
+            <span className="rc-info-label">Class:</span>
+            <span className="rc-info-val"><strong>{rc.class?.name}</strong></span>
+          </div>
+          <div className="rc-info-row">
+            <span className="rc-info-label">Date of Birth :</span>
+            <span className="rc-info-val">{fmt(rc.student?.date_of_birth)}</span>
+            <span className="rc-info-label">Class number:</span>
+            <span className="rc-info-val">{rc.rank}</span>
+          </div>
+          <div className="rc-info-row">
+            <span className="rc-info-label">Place of Birth:</span>
+            <span className="rc-info-val">{rc.student?.place_of_birth || ''}</span>
+            <span className="rc-info-label">ENROLMENT:</span>
+            <span className="rc-info-val">{rc.class_size}</span>
+          </div>
+          <div className="rc-info-row">
+            <span className="rc-info-label">SEX</span>
+            <span className="rc-info-val">{rc.student?.gender || ''}</span>
+            <span className="rc-info-label">STUDENT ID</span>
+            <span className="rc-info-val">{rc.student?.local_id || rc.student?.student_number}</span>
+          </div>
         </div>
-        <div className="rc-info-row">
-          <span className="rc-info-label">Date of Birth :</span>
-          <span className="rc-info-val">{fmt(rc.student?.date_of_birth)}</span>
-          <span className="rc-info-label">Class number:</span>
-          <span className="rc-info-val">{rc.rank}</span>
-        </div>
-        <div className="rc-info-row">
-          <span className="rc-info-label">Place of Birth:</span>
-          <span className="rc-info-val">{rc.student?.place_of_birth || ''}</span>
-          <span className="rc-info-label">ENROLMENT:</span>
-          <span className="rc-info-val">{rc.class_size}</span>
-        </div>
-        <div className="rc-info-row">
-          <span className="rc-info-label">SEX</span>
-          <span className="rc-info-val">{rc.student?.gender || ''}</span>
-          <span className="rc-info-label">STUDENT ID</span>
-          <span className="rc-info-val">{rc.student?.local_id || rc.student?.student_number}</span>
+        <div className="rc-info-photo">
+          {photoPath
+            ? <img src={API_BASE + photoPath} alt="student" className="rc-photo-img" />
+            : <div className="rc-photo-ph">No Photo</div>}
         </div>
       </div>
 
@@ -94,69 +102,48 @@ function RcCard({ rc, API_BASE, fmt }) {
               <td className="rc-teacher-cell">{s.teacher || ''}</td>
             </tr>
           ))}
-          <tr className="rc-perf-row">
-            <td><strong>STUDENT'S PERFORMANCE</strong></td>
-            <td colSpan="2" className="rc-num"><strong>FIRST TERM</strong><br/>{rc.term_averages?.[1] ?? ''}</td>
-            <td colSpan="2" className="rc-num"><strong>SECOND TERM</strong><br/>{rc.term_averages?.[2] ?? ''}</td>
+          <tr className="rc-totals-row">
+            <td></td><td></td><td></td><td></td>
             <td className="rc-num"><strong>{rc.total_coeff}</strong></td>
-            <td className="rc-num"><strong>{rc.total_points}</strong></td>
-            <td colSpan="2" className="rc-remark-cell">Subjects Sat :{rc.subjects_sat}<br/>Subjects Passed :{rc.subjects_passed}</td>
+            <td className="rc-num rc-total-cell"><strong>{rc.total_points}</strong></td>
+            <td></td><td></td><td></td>
           </tr>
         </tbody>
       </table>
 
-      <div className="rc-bottom">
-        <table className="rc-stats-table">
-          <tbody>
-            <tr>
-              <th>Total Marks</th><td>{rc.total_points}</td>
-              <th rowSpan="4" style={{padding:'4px 8px',background:'#f0f0f0'}}>class Performance</th>
-              <th rowSpan="4" style={{verticalAlign:'top',padding:'4px 8px',background:'#f0f0f0'}}>
-                Highest Avg<br/><strong style={{color:'#2E9E4E'}}>{rc.highest_avg}</strong><br/>
-                Lowest Avg<br/><strong style={{color:'#c0392b'}}>{rc.lowest_avg}</strong>
-              </th>
-              <th rowSpan="4" colSpan="2" style={{padding:'4px 8px',fontWeight:'bold',color:'#1B2A4A',background:'#EBF1F8'}}>PRINCIPAL'S REMARKS</th>
-            </tr>
-            <tr><th>Total Coeff</th><td>{rc.total_coeff}</td></tr>
-            <tr><th>Avg</th><td><strong style={{color:g>=10?'#2E9E4E':'#c0392b'}}>{g}</strong></td></tr>
-            <tr><th>Position</th><td><strong>{rc.rank} /{rc.class_size}</strong></td></tr>
-            <tr><th>Remark</th><td colSpan="2">{rc.appreciation}</td><td>Class Avg</td><td colSpan="2">{rc.class_avg}</td></tr>
-          </tbody>
-        </table>
-
-        <div className="rc-conduct-grid">
-          <div className="rc-conduct">
-            <div className="rc-conduct-title">GENERAL CONDUCT/DISCIPLINE</div>
-            <table className="rc-conduct-table"><tbody>
-              <tr><td>Absences in hours</td><td>{rc.attendance?.absent || '.'}</td></tr>
-              <tr><td>Dismissed</td><td></td></tr>
-              <tr><td>Warning</td><td></td></tr>
-              <tr><td>Serious Warning</td><td></td></tr>
-              <tr><td>Suspension in days</td><td></td></tr>
-            </tbody></table>
-            <div className="rc-fees">FEES OWED:<strong> 0</strong></div>
-            <div className="rc-council">
-              <strong>CLASS COUNCIL DECISION</strong>
-              <p>{g >= 14 ? 'Satisfactory' : g >= 10 ? 'Could do better' : 'Must Work Harder'}</p>
-            </div>
-          </div>
-          <div className="rc-academic">
-            <div className="rc-conduct-title">ACADEMIC WORK</div>
-            <table className="rc-conduct-table"><tbody>
-              <tr><td>Distinction</td><td>{g >= 16 ? 'X' : ''}</td></tr>
-              <tr><td>Credit</td><td>{g >= 12 && g < 16 ? 'X' : ''}</td></tr>
-              <tr><td>Honour roll</td><td>{g >= 14 && g < 16 ? 'X' : ''}</td></tr>
-              <tr><td>Average</td><td>{g >= 10 && g < 12 ? 'X' : ''}</td></tr>
-              <tr><td>Dismissed</td><td>{g < 10 ? 'X' : ''}</td></tr>
-              <tr><td>Warning</td><td></td></tr>
-              <tr><td>Serious Waring</td><td></td></tr>
-            </tbody></table>
-            <div className="rc-parent-sig">
-              <strong>PARENT'S SIGNATURE</strong>
-              <div className="rc-sig-line"></div>
-            </div>
-          </div>
+      <div className="rc-perf-grid">
+        <div className="rc-perf-col">
+          <div className="rc-perf-header">Student's / Class Performance</div>
+          <div className="rc-perf-item"><span className="rc-perf-label">First Term Average</span><span className="rc-perf-val">{rc.term_averages?.[1] ?? '-'}</span></div>
+          <div className="rc-perf-item"><span className="rc-perf-label">Second Term Average</span><span className="rc-perf-val">{rc.term_averages?.[2] ?? '-'}</span></div>
+          <div className="rc-perf-item"><span className="rc-perf-label">Third Term Average</span><span className="rc-perf-val">{rc.term_averages?.[3] ?? '-'}</span></div>
+          <div className="rc-perf-item"><span className="rc-perf-label">Annual Average</span><span className="rc-perf-val">{rc.annual_avg ?? '-'}</span></div>
+          <div className="rc-perf-item"><span className="rc-perf-label">Annual Position</span><span className="rc-perf-val">{rc.annual_position ? `${rc.annual_position}/${rc.class_size}` : '-'}</span></div>
+          <div className="rc-perf-item"><span className="rc-perf-label">Appreciation</span><span className="rc-perf-val">{rc.appreciation}</span></div>
         </div>
+        <div className="rc-perf-col">
+          <div className="rc-perf-header">Discipline</div>
+          <div className="rc-perf-item"><span className="rc-perf-label">Highest Avg</span><span className="rc-perf-val">{rc.highest_avg ?? '-'}</span></div>
+          <div className="rc-perf-item"><span className="rc-perf-label">Lowest Avg</span><span className="rc-perf-val">{rc.lowest_avg ?? '-'}</span></div>
+          <div className="rc-perf-item"><span className="rc-perf-label">Class Avg</span><span className="rc-perf-val">{rc.class_avg ?? '-'}</span></div>
+          <div className="rc-perf-item"><span className="rc-perf-label">Subjects Sat</span><span className="rc-perf-val">{rc.subjects_sat}</span></div>
+          <div className="rc-perf-item"><span className="rc-perf-label">Subjects Passed</span><span className="rc-perf-val">{rc.subjects_passed}</span></div>
+          <div className="rc-perf-item"><span className="rc-perf-label">Absences</span><span className="rc-perf-val">{rc.attendance?.absent || '-'}</span></div>
+        </div>
+        <div className="rc-perf-col">
+          <div className="rc-perf-header">Academic Work</div>
+          {['Distinction','Honour Roll','Credit','Pass','Below Average'].map(label => (
+            <div className="rc-perf-item" key={label}>
+              <span className="rc-perf-label">{label}</span>
+              <span className="rc-perf-val">{rc.academic_work === label ? 'X' : ''}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rc-footer-grid">
+        <div className="rc-footer-cell">Next Academic Year Resumption Date</div>
+        <div className="rc-footer-cell">Principal's Signature</div>
       </div>
     </div>
   );

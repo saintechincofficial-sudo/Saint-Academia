@@ -10,14 +10,18 @@
 .rc-title { text-align: center; font-size: 12px; font-weight: bold; text-transform: uppercase; border: 2px solid #000; padding: 5px; margin: 6px 0; }
 
 /* Student info */
-.rc-info-grid { border: 1px solid #000; margin-bottom: 6px; }
+.rc-info-grid { border: 1px solid #000; margin-bottom: 6px; display: flex; }
+.rc-info-main { flex: 1; }
 .rc-info-row { display: grid; grid-template-columns: 130px 1fr 110px 1fr; border-bottom: 1px solid #ccc; }
 .rc-info-row:last-child { border-bottom: none; }
 .rc-info-label { background: #f0f0f0; font-weight: bold; padding: 3px 6px; font-size: 9px; border-right: 1px solid #ccc; }
 .rc-info-val { padding: 3px 6px; font-size: 9px; border-right: 1px solid #ccc; }
+.rc-info-photo { width: 80px; border-left: 1px solid #000; display: flex; align-items: center; justify-content: center; padding: 4px; }
+.rc-photo-img { width: 70px; height: 78px; object-fit: cover; border: 1px solid #999; }
+.rc-photo-ph { width: 70px; height: 78px; border: 1px solid #999; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #999; text-align: center; }
 
 /* Main table */
-.rc-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 6px; }
+.rc-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 0; }
 .rc-table th { background: #1B2A4A; color: #fff; padding: 4px 3px; text-align: center; border: 1px solid #000; font-size: 8px; }
 .rc-table td { border: 1px solid #999; padding: 3px 3px; vertical-align: middle; }
 .rc-even { background: #fafafa; }
@@ -35,28 +39,22 @@
 .rc-total-cell { background: #FFF3D6; font-weight: bold; text-align: center; }
 .rc-remark-cell { font-size: 8px; }
 .rc-teacher-cell { font-size: 8px; font-style: italic; }
+.rc-totals-row td { background: #f0f0f0; }
 
-/* Performance row */
-.rc-perf-row td { background: #EBF1F8; font-size: 8.5px; text-align: center; }
+/* Performance / Discipline / Academic Work — 3-column bottom section */
+.rc-perf-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; border: 1px solid #000; border-top: none; margin-bottom: 0; }
+.rc-perf-col { border-right: 1px solid #000; }
+.rc-perf-col:last-child { border-right: none; }
+.rc-perf-header { background: #1B2A4A; color: #fff; text-align: center; font-weight: bold; font-size: 8.5px; padding: 3px; text-transform: uppercase; }
+.rc-perf-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ccc; padding: 4px 6px; font-size: 8.5px; min-height: 16px; }
+.rc-perf-item:last-child { border-bottom: none; }
+.rc-perf-label { font-weight: bold; }
+.rc-perf-val { font-weight: bold; text-align: right; }
 
-/* Stats */
-.rc-bottom { display: grid; grid-template-columns: 1fr; gap: 6px; }
-.rc-stats-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 6px; }
-.rc-stats-table th { background: #f0f0f0; padding: 3px 6px; text-align: left; border: 1px solid #ccc; font-weight: bold; }
-.rc-stats-table td { padding: 3px 6px; border: 1px solid #ccc; }
-
-/* Conduct */
-.rc-conduct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.rc-conduct, .rc-academic { border: 1px solid #ccc; padding: 4px; }
-.rc-conduct-title { background: #1B2A4A; color: #fff; text-align: center; font-weight: bold; font-size: 9px; padding: 3px; margin-bottom: 4px; }
-.rc-conduct-table { width: 100%; border-collapse: collapse; font-size: 8.5px; }
-.rc-conduct-table td { border: 1px solid #ddd; padding: 2px 4px; }
-.rc-fees { margin-top: 6px; font-size: 9px; padding: 3px; border: 1px solid #ccc; }
-.rc-council { margin-top: 6px; font-size: 9px; }
-.rc-council strong { display: block; margin-bottom: 3px; font-size: 9px; text-transform: uppercase; }
-.rc-council p { margin: 2px 0; }
-.rc-parent-sig { margin-top: 12px; text-align: center; font-size: 9px; font-weight: bold; }
-.rc-sig-line { border-bottom: 1px solid #333; margin: 20px 10px 4px; }
+/* Footer */
+.rc-footer-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #000; border-top: none; }
+.rc-footer-cell { padding: 6px 8px 22px; font-size: 8.5px; font-weight: bold; text-transform: uppercase; }
+.rc-footer-cell:first-child { border-right: 1px solid #000; }
 
 /* Student selector */
 .rc-student-list { background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px; margin-bottom: 16px; }

@@ -299,6 +299,12 @@ class ReportCardController
                 }
             }
 
+            // Per-term academic work labels (for STUDENT'S/CLASS PERFORMANCE section)
+            $termAcademicWork = [];
+            foreach ($prevTerms as $tNum => $tAvg) {
+                $termAcademicWork[$tNum] = $tAvg !== null ? self::academicWork((float)$tAvg) : '-';
+            }
+
             // Attendance
             $attStmt = $pdo->prepare(
                 'SELECT
@@ -338,6 +344,7 @@ class ReportCardController
                     'term_averages'   => $prevTerms,
                     'annual_avg'      => $annualAvg,
                     'annual_position' => $annualPosition,
+                    'term_academic_work' => $termAcademicWork,
                     'attendance'      => [
                         'present' => (int)($att['present'] ?? 0),
                         'absent'  => (int)($att['absent']  ?? 0),
