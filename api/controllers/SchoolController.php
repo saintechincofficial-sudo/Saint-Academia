@@ -196,7 +196,7 @@ class SchoolController
             }
             $pdo  = getDatabaseConnection();
             $stmt = $pdo->prepare(
-                'SELECT s.id, s.name, s.name_fr, s.address, s.phone, s.email,
+                'SELECT s.id, s.parent_school_id, s.name, s.name_fr, s.institution_type, s.address, s.phone, s.email,
                         s.logo_path, s.region, s.motto, s.is_active, s.created_at,
                         (SELECT COUNT(*) FROM students WHERE school_id=s.id AND status="active") AS student_count,
                         (SELECT COUNT(*) FROM staff WHERE school_id=s.id AND status="active") AS staff_count,
