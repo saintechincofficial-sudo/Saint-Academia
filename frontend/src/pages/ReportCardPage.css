@@ -90,3 +90,7 @@
 /* Term average values — colored by pass/fail, not fixed red */
 .rc-value-pass { color: #0000cc !important; }
 .rc-value-fail { color: #cc0000 !important; }
+
+/* Position badge in student picker — deliberately neutral, not tied to avg-pass/fail colors */
+.rc-position-badge { display: inline-block; margin-top: 2px; padding: 1px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; background: #EBF1F8; color: #1B2A4A !important; }
+.rc-student-btn.active .rc-position-badge { background: rgba(255,255,255,0.2); color: #fff !important; }

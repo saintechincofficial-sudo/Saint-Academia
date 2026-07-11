@@ -139,64 +139,71 @@ function RcCard({ rc, API_BASE, fmt }) {
           </tr>
         </tbody>
       </table>
-
       <div className="rc-perf-grid">
         <div className="rc-perf-left">
           <table className="rc-summary-table">
             <tbody>
               <tr><th colSpan="4" style={{textAlign:'left'}}>STUDENT'S / CLASS PERFORMANCE</th></tr>
+              {termNum >= 3 && (
+                <tr>
+                  <td className="rc-label-cell">Annual Average</td>
+                  <td className={'rc-value-cell ' + valueClass(rc.annual_avg)}>{rc.annual_avg ?? '-'}</td>
+                  <td className="rc-label-cell">Annual Position</td>
+                  <td className={'rc-value-small ' + valueClass(rc.annual_avg)}>{rc.annual_position ? `${rc.annual_position}/${rc.class_size}` : '-'}</td>
+                </tr>
+              )}
               <tr>
                 <td className="rc-label-cell">First Term Average</td>
                 <td className={'rc-value-cell ' + valueClass(rc.term_averages?.[1])}>{rc.term_averages?.[1] ?? '-'}</td>
-                <td className="rc-label-cell">Highest Avg</td>
-                <td className="rc-value-small">{rc.highest_avg ?? '-'}</td>
+                <td className="rc-label-cell">{termNum >= 3 ? 'Term Position' : 'Position'}</td>
+                <td className={'rc-value-small ' + valueClass(g)}>{rc.rank ? `${rc.rank}/${rc.class_size}` : '-'}</td>
               </tr>
               {termNum >= 2 && (
                 <tr>
                   <td className="rc-label-cell">Second Term Average</td>
                   <td className={'rc-value-cell ' + valueClass(rc.term_averages?.[2])}>{rc.term_averages?.[2] ?? '-'}</td>
-                  <td className="rc-label-cell">Lowest Avg</td>
-                  <td className="rc-value-small">{rc.lowest_avg ?? '-'}</td>
+                  <td className="rc-label-cell"></td>
+                  <td></td>
                 </tr>
               )}
               {termNum >= 3 && (
                 <tr>
                   <td className="rc-label-cell">Third Term Average</td>
                   <td className={'rc-value-cell ' + valueClass(rc.term_averages?.[3])}>{rc.term_averages?.[3] ?? '-'}</td>
-                  <td className="rc-label-cell">Class Avg</td>
-                  <td className="rc-value-small">{rc.class_avg ?? '-'}</td>
+                  <td className="rc-label-cell"></td>
+                  <td></td>
                 </tr>
               )}
-              {termNum >= 3 && (
-                <tr>
-                  <td className="rc-label-cell">Annual Average</td>
-                  <td className={'rc-value-cell ' + valueClass(rc.annual_avg)}>{rc.annual_avg ?? '-'}</td>
-                  <td className="rc-label-cell">Subjects Sat</td>
-                  <td className="rc-value-small">{rc.subjects_sat}</td>
-                </tr>
-              )}
-              {termNum >= 3 && (
-                <tr>
-                  <td className="rc-label-cell">Annual Position</td>
-                  <td className="rc-value-small">{rc.annual_position ? `${rc.annual_position}/${rc.class_size}` : '-'}</td>
-                  <td className="rc-label-cell">Absences:</td>
-                  <td className="rc-value-small">{rc.attendance?.absent || '-'}</td>
-                </tr>
-              )}
+              <tr>
+                <td className="rc-label-cell">Highest Avg</td>
+                <td className="rc-value-small">{rc.highest_avg ?? '-'}</td>
+                <td className="rc-label-cell">Lowest Avg</td>
+                <td className="rc-value-small">{rc.lowest_avg ?? '-'}</td>
+              </tr>
+              <tr>
+                <td className="rc-label-cell">Class Avg</td>
+                <td className="rc-value-small">{rc.class_avg ?? '-'}</td>
+                <td className="rc-label-cell">Absences</td>
+                <td className="rc-value-small">{rc.attendance?.absent || '-'}</td>
+              </tr>
+              <tr>
+                <td className="rc-label-cell">Subjects Sat</td>
+                <td className="rc-value-small">{rc.subjects_sat}</td>
+                <td className="rc-label-cell">Subjects Passed</td>
+                <td className="rc-value-small">{rc.subjects_passed}</td>
+              </tr>
               <tr>
                 <td className="rc-label-cell">Appreciation</td>
                 <td colSpan="3" className="rc-appreciation-val">{rc.appreciation}</td>
               </tr>
               <tr>
-                <td></td>
-                <td className="rc-label-cell">Subjects Passed</td>
-                <td className="rc-value-small">{rc.subjects_passed}</td>
-                <td></td>
+                {/* PLACEHOLDER: Fees Owed hardcoded to 0 until the Fees module is built and wired to real balance data */}
+                <td className="rc-label-cell">Fees Owed</td>
+                <td colSpan="3" className="rc-value-small">0</td>
               </tr>
             </tbody>
           </table>
         </div>
-
         <div className="rc-perf-mid">
           <table className="rc-summary-table">
             <tbody>
@@ -399,13 +406,14 @@ export default function ReportCardPage() {
         <div className="rc-student-list no-print">
           <h3>Select a student ({students.length})</h3>
           <div className="rc-student-grid">
-            {students.map(s => (
+            {students.map((s, idx) => (
               <button key={s.id}
                 className={'rc-student-btn' + (String(s.id) === String(studentId) ? ' active' : '')}
                 onClick={() => generate(s.id)}>
                 <strong>{s.last_name} {s.first_name}</strong>
                 <span>{s.student_number}</span>
                 {s.avg && <span className={parseFloat(s.avg) >= 10 ? 'avg-pass' : 'avg-fail'}>{s.avg}/20</span>}
+                <span className="rc-position-badge">{idx + 1}{idx===0?'st':idx===1?'nd':idx===2?'rd':'th'}</span>
               </button>
             ))}
           </div>
