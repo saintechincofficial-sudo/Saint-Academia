@@ -2,12 +2,12 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../middleware/Auth.php';
 require_once __DIR__ . '/../utils/SchoolHelper.php';
-
 class ReportCardController
 {
     private static function cbaRemark(float $avg): string
     {
-        if ($avg >= 16) return 'Competence Well Acquired(CWA)';
+        if ($avg >= 18) return 'Competence Very Well Acquired(CVWA)';
+        if ($avg >= 14) return 'Competence Well Acquired(CWA)';
         if ($avg >= 10) return 'Competence Averagely Acquired(CAA)';
         return 'Competence Not Acquired(CNA)';
     }
@@ -23,7 +23,8 @@ class ReportCardController
 
     private static function appreciation(float $avg): string
     {
-        if ($avg >= 16) return 'Competence Well Acquired(CWA)';
+        if ($avg >= 18) return 'Competence Very Well Acquired(CVWA)';
+        if ($avg >= 14) return 'Competence Well Acquired(CWA)';
         if ($avg >= 10) return 'Competence Averagely Acquired(CAA)';
         return 'Competence Not Acquired(CNA)';
     }
@@ -111,7 +112,6 @@ class ReportCardController
             }
 
             // Get per-subject positions for all students in this class
-            // For each subject, rank all students by term avg
             $stmt = $pdo->prepare(
                 'SELECT er.student_id, er.subject_id,
                         AVG(er.score) AS avg_score
@@ -123,7 +123,6 @@ class ReportCardController
             $stmt->execute([$classId, $schoolId, $seq1Num, $seq2Num]);
             $allSubjectResults = $stmt->fetchAll();
 
-            // Build subject ranking map [subject_id] => sorted array of student_ids
             $subjectRankMap = [];
             foreach ($allSubjectResults as $r) {
                 $subjectRankMap[$r['subject_id']][] = [
@@ -143,7 +142,6 @@ class ReportCardController
             }
 
             // Get teacher assignments per subject
-            // Using workload if exists, else class teacher
             $teacherMap = [];
             try {
                 $stmt = $pdo->prepare(
@@ -174,7 +172,6 @@ class ReportCardController
                 $s1 = $scoreMap[$sid][$seq1Num] ?? null;
                 $s2 = $scoreMap[$sid][$seq2Num] ?? null;
 
-                // Term avg = average of both sequences
                 if ($s1 !== null && $s2 !== null) {
                     $termAvg = round(($s1 + $s2) / 2, 2);
                 } elseif ($s1 !== null) {
@@ -208,11 +205,9 @@ class ReportCardController
                 ];
             }
 
-            // General average
             $generalAvg = ($totalCoeff > 0 && $subjectsSat > 0)
                 ? round($totalPoints / $totalCoeff, 2) : null;
 
-            // Class ranking - get all students general averages
             $stmt = $pdo->prepare(
                 'SELECT se.student_id,
                         ROUND(SUM(er.score * sub.coefficient) / SUM(sub.coefficient), 2) AS wavg
@@ -275,7 +270,6 @@ class ReportCardController
                 $annualAvg = round(array_sum($validTermAvgs) / count($validTermAvgs), 2);
             }
 
-            // Annual position
             $annualRankStmt = $pdo->prepare(
                 'SELECT se.student_id,
                         ROUND(AVG(er.score * sub.coefficient / sub.coefficient), 2) AS wavg
@@ -407,6 +401,7 @@ class ReportCardController
         }
 
     }
+
     public static function generateAll(): array
     {
         try {
