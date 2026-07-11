@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
+import { useAuth } from '../hooks/useAuth';
 
 export default function AcademicYearPage() {
   const { get, post, apiCall } = useApi();
+  const { user } = useAuth();
+  const userRoles = Array.isArray(user?.roles) ? user.roles : [user?.role].filter(Boolean);
+  const isSuperAdmin = userRoles.includes('super_admin');
 
   const [years,   setYears]   = useState([]);
+  const [catalog, setCatalog] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving,  setSaving]  = useState(false);
+  const [adopting,setAdopting]= useState(false);
   const [message, setMessage] = useState('');
   const [error,   setError]   = useState('');
   const [showForm,setShowForm]= useState(false);
+  const [showAdoptForm, setShowAdoptForm] = useState(false);
   const [form,    setForm]    = useState({
     label: '', start_date: '', end_date: '', is_current: 0, create_terms: true
+  });
+  const [adoptForm, setAdoptForm] = useState({
+    catalog_year_id: '', start_date: '', end_date: '', is_current: 0
   });
 
   const load = async () => {
@@ -22,7 +32,12 @@ export default function AcademicYearPage() {
     else setError(res.message);
   };
 
-  useEffect(() => { load(); }, []);
+  const loadCatalog = async () => {
+    const res = await get('/academic-year-catalog');
+    if (res.success) setCatalog(res.catalog || []);
+  };
+
+  useEffect(() => { load(); if (isSuperAdmin) loadCatalog(); }, []);
 
   // Auto-fill label from start date
   const handleStartDate = (val) => {
@@ -50,6 +65,29 @@ export default function AcademicYearPage() {
     } else setError(res.message);
   };
 
+  const handleCatalogSelect = (catalogId) => {
+    const cy = catalog.find(c => String(c.id) === String(catalogId));
+    setAdoptForm(p => ({
+      ...p,
+      catalog_year_id: catalogId,
+      start_date: cy?.default_start_date?.slice(0,10) || '',
+      end_date: cy?.default_end_date?.slice(0,10) || '',
+    }));
+  };
+
+  const handleAdoptSubmit = async e => {
+    e.preventDefault();
+    setAdopting(true); setMessage(''); setError('');
+    const res = await apiCall('/academic-year-adopt', { method: 'POST', body: JSON.stringify(adoptForm) });
+    setAdopting(false);
+    if (res.success) {
+      setMessage(res.message + ` (${res.institution_type === 'higher_ed' ? 'semesters' : 'terms'} generated).`);
+      setShowAdoptForm(false);
+      setAdoptForm({ catalog_year_id:'', start_date:'', end_date:'', is_current:0 });
+      load();
+    } else setError(res.message);
+  };
+
   const setCurrent = async (id) => {
     const res = await apiCall('/academic-years/set-current?id=' + id, { method:'GET' });
     if (res.success) { setMessage('Current year updated.'); load(); }
@@ -60,13 +98,61 @@ export default function AcademicYearPage() {
     <div className="tab-content">
       <div className="section-header">
         <h2>Academic Years</h2>
-        <button className="btn-primary" onClick={() => { setShowForm(p=>!p); setMessage(''); setError(''); }}>
-          {showForm ? 'Cancel' : '+ New Academic Year'}
-        </button>
+        <div style={{ display:'flex', gap:10 }}>
+          {isSuperAdmin && (
+            <button className="btn-secondary" onClick={() => { setShowAdoptForm(p=>!p); setShowForm(false); setMessage(''); setError(''); }}>
+              {showAdoptForm ? 'Cancel' : '+ Adopt from Catalog'}
+            </button>
+          )}
+          <button className="btn-primary" onClick={() => { setShowForm(p=>!p); setShowAdoptForm(false); setMessage(''); setError(''); }}>
+            {showForm ? 'Cancel' : '+ New Academic Year'}
+          </button>
+        </div>
       </div>
 
       {message && <div className="success-banner">{message}</div>}
       {error   && <div className="error-banner">{error}</div>}
+
+      {showAdoptForm && (
+        <div className="form-card">
+          <h3 style={{ margin:'0 0 16px', fontSize:15, fontWeight:700, color:'#1B2A4A' }}>Adopt Year from Catalog</h3>
+          <form onSubmit={handleAdoptSubmit}>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Catalog Year *</label>
+                <select value={adoptForm.catalog_year_id} onChange={e => handleCatalogSelect(e.target.value)} className="select-input" required>
+                  <option value="">Select a year...</option>
+                  {catalog.map(c => (
+                    <option key={c.id} value={c.id}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Start Date *</label>
+                <input type="date" value={adoptForm.start_date} onChange={e => setAdoptForm(p=>({...p,start_date:e.target.value}))} required />
+              </div>
+              <div className="form-group">
+                <label>End Date *</label>
+                <input type="date" value={adoptForm.end_date} onChange={e => setAdoptForm(p=>({...p,end_date:e.target.value}))} required />
+              </div>
+            </div>
+            <div style={{ margin:'12px 0 16px', fontSize:14 }}>
+              <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer' }}>
+                <input type="checkbox" checked={!!adoptForm.is_current}
+                  onChange={e => setAdoptForm(p=>({...p,is_current:e.target.checked?1:0}))} />
+                Set as current year
+              </label>
+              <p style={{ color:'#5a6b8c', fontSize:12, margin:'6px 0 0' }}>
+                Terms or semesters will be generated automatically based on this school's institution type.
+              </p>
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn-secondary" onClick={() => setShowAdoptForm(false)}>Cancel</button>
+              <button type="submit" className="btn-primary" disabled={adopting}>{adopting ? 'Adopting...' : 'Adopt Year'}</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {showForm && (
         <div className="form-card">
