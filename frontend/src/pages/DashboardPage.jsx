@@ -22,6 +22,7 @@ import ReportCardPage from './ReportCardPage';
 import WorkloadPage from './WorkloadPage';
 import IDCardPage from './IDCardPage';
 import AcademicYearPage from './AcademicYearPage';
+import CatalogPage from './CatalogPage';
 import './DashboardPage.css';
 
 const NAV_GROUPS = [
@@ -62,6 +63,7 @@ const NAV_GROUPS = [
     label: 'Admin',
     items: [
       { id:'academicyears',label:'Academic Years',Icon:GraduationCap,  roles:['super_admin','school_admin'] },
+      { id:'catalog', label:'Year Catalog', Icon:Calendar, roles:['super_admin'] },
       { id:'school',      label:'My School',    Icon:Settings,        roles:['super_admin','school_admin'] },
       { id:'schools',     label:'Schools',      Icon:Building2,       roles:['super_admin'] },
     ]
@@ -95,7 +97,7 @@ export default function DashboardPage() {
     ...g,
     items: g.items.filter(i => {
       // Super admin without school context only sees Schools tab
-      if (isSuperAdmin) return i.id === 'schools' || i.id === 'idcards' || i.id === 'academicyears';
+      if (isSuperAdmin) return i.id === 'schools' || i.id === 'idcards' || i.id === 'academicyears' || i.id === 'catalog';
       return hasRole(i.roles);
     })
   })).filter(g => g.items.length > 0);
@@ -224,6 +226,7 @@ export default function DashboardPage() {
             {activeTab === 'idcards'     && <IDCardPage />}
             {activeTab === 'school'  && user?.role !== 'super_admin' && <SchoolProfile />}
             {activeTab === 'academicyears' && <AcademicYearPage />}
+            {activeTab === 'catalog' && <CatalogPage />}
             {activeTab === 'schools' && user?.role === 'super_admin' && !contextSchoolId && (
               <SuperAdminSchools
                 onEnterSchool={(school) => {
