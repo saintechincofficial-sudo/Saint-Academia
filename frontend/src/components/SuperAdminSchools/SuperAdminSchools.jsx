@@ -4,6 +4,11 @@ import { useApi } from '../../hooks/useApi';
 const API_BASE = import.meta.env.VITE_API_BASE_URL?.replace('/api','') || 'http://localhost/SaintAcademia';
 const REGIONS  = ['Adamawa','Centre','East','Far North','Littoral','North','North West','South','South West','West'];
 const VIEWS    = [{ key:'schools', label:'All Schools' }, { key:'create', label:'+ New School' }, { key:'billing', label:'Billing' }];
+const INSTITUTION_TYPES = [
+  { value:'primary',   label:'Primary' },
+  { value:'secondary', label:'Secondary' },
+  { value:'higher_ed', label:'Higher Ed (University)' },
+];
 
 function StatPill({ label, value, color }) {
   return (
@@ -11,6 +16,20 @@ function StatPill({ label, value, color }) {
       <div style={{ fontSize:20, fontWeight:800, color, lineHeight:1 }}>{value}</div>
       <div style={{ fontSize:10, color:'#888', marginTop:2, textTransform:'uppercase', letterSpacing:'0.5px' }}>{label}</div>
     </div>
+  );
+}
+
+function InstitutionBadge({ type }) {
+  const map = {
+    primary:   { label:'Primary',   bg:'#eef6fc', color:'#1E88C7' },
+    secondary: { label:'Secondary', bg:'#f3edfa', color:'#8E44AD' },
+    higher_ed: { label:'Higher Ed', bg:'#fff6e8', color:'#B8730A' },
+  };
+  const t = map[type] || map.secondary;
+  return (
+    <span style={{ padding:'2px 8px', borderRadius:20, fontSize:11, fontWeight:700, background:t.bg, color:t.color }}>
+      {t.label}
+    </span>
   );
 }
 
@@ -30,6 +49,7 @@ export default function SuperAdminSchools({ onEnterSchool }) {
   const [form, setForm] = useState({
     name:'', name_fr:'', address:'', phone:'', email:'',
     admin_email:'', admin_password:'', region:'', motto:'',
+    institution_type:'secondary', parent_school_id:'',
   });
 
   const loadSchools = async () => {
@@ -48,7 +68,7 @@ export default function SuperAdminSchools({ onEnterSchool }) {
     setSaving(false);
     if (res.success) {
       setMessage('School created successfully.');
-      setForm({ name:'', name_fr:'', address:'', phone:'', email:'', admin_email:'', admin_password:'', region:'', motto:'' });
+      setForm({ name:'', name_fr:'', address:'', phone:'', email:'', admin_email:'', admin_password:'', region:'', motto:'', institution_type:'secondary', parent_school_id:'' });
       setView('schools'); loadSchools();
     } else setError(res.message);
   };
@@ -64,7 +84,12 @@ export default function SuperAdminSchools({ onEnterSchool }) {
 
   const openEdit = (school) => {
     setEditSchool(school);
-    setEditForm({ name:school.name, name_fr:school.name_fr||'', address:school.address||'', phone:school.phone||'', email:school.email||'', region:school.region||'', motto:school.motto||'' });
+    setEditForm({
+      name:school.name, name_fr:school.name_fr||'', address:school.address||'', phone:school.phone||'',
+      email:school.email||'', region:school.region||'', motto:school.motto||'',
+      institution_type: school.institution_type || 'secondary',
+      parent_school_id: school.parent_school_id || '',
+    });
   };
 
   const saveEdit = async e => {
@@ -82,6 +107,9 @@ export default function SuperAdminSchools({ onEnterSchool }) {
   const totalStudents = schools.reduce((n, s) => n + (parseInt(s.student_count)||0), 0);
   const totalStaff    = schools.reduce((n, s) => n + (parseInt(s.staff_count)||0), 0);
   const activeSchools = schools.filter(s => s.is_active).length;
+  const schoolsById   = Object.fromEntries(schools.map(s => [s.id, s]));
+  // Exclude the school itself (and, loosely, any school that already has this one as parent) from parent options
+  const parentOptions = (excludeId) => schools.filter(s => s.id !== excludeId && !s.parent_school_id);
 
   return (
     <div className="tab-content">
@@ -139,12 +167,18 @@ export default function SuperAdminSchools({ onEnterSchool }) {
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
                       <strong style={{ fontSize:15, color:'#1B2A4A' }}>{school.name}</strong>
+                      <InstitutionBadge type={school.institution_type} />
                       <span style={{ padding:'2px 8px', borderRadius:20, fontSize:11, fontWeight:700, background: school.is_active ? '#edfaf1' : '#fef0ee', color: school.is_active ? '#1e8449' : '#c0392b' }}>
                         {school.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </div>
                     {school.name_fr && <div style={{ fontSize:12, color:'#888', marginTop:2 }}>{school.name_fr}</div>}
                     {school.region  && <div style={{ fontSize:12, color:'#7a8fae' }}>{school.region}</div>}
+                    {school.parent_school_id && schoolsById[school.parent_school_id] && (
+                      <div style={{ fontSize:12, color:'#B8730A', marginTop:2, fontWeight:600 }}>
+                        Section of: {schoolsById[school.parent_school_id].name}
+                      </div>
+                    )}
                   </div>
                   <div style={{ display:'flex', gap:20, padding:'0 16px', borderLeft:'1px solid #e5e9f0', borderRight:'1px solid #e5e9f0' }}>
                     <StatPill label="Students" value={school.student_count||0} color="#1E88C7" />
@@ -190,6 +224,22 @@ export default function SuperAdminSchools({ onEnterSchool }) {
                 <div className="form-group">
                   <label>School Name (French)</label>
                   <input value={form.name_fr} onChange={e=>setForm(p=>({...p,name_fr:e.target.value}))} />
+                </div>
+                <div className="form-group">
+                  <label>Institution Type *</label>
+                  <select value={form.institution_type} onChange={e=>setForm(p=>({...p,institution_type:e.target.value}))} className="select-input" required>
+                    {INSTITUTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ gridColumn:'1/-1' }}>
+                  <label>Section of an existing school? (optional)</label>
+                  <select value={form.parent_school_id} onChange={e=>setForm(p=>({...p,parent_school_id:e.target.value}))} className="select-input">
+                    <option value="">- Standalone school, not a section -</option>
+                    {parentOptions(null).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                  <p style={{ fontSize:12, color:'#7a8fae', margin:'6px 0 0' }}>
+                    Use this if you're adding e.g. a University section under an institution that already has a Secondary school registered.
+                  </p>
                 </div>
                 <div className="form-group">
                   <label>Region</label>
@@ -245,7 +295,7 @@ export default function SuperAdminSchools({ onEnterSchool }) {
           <table className="data-table">
             <thead>
               <tr>
-                <th>#</th><th>School</th><th>Region</th>
+                <th>#</th><th>School</th><th>Type</th><th>Region</th>
                 <th>Students</th><th>Staff</th><th>Classes</th>
                 <th>Status</th><th>Created</th>
               </tr>
@@ -254,7 +304,13 @@ export default function SuperAdminSchools({ onEnterSchool }) {
               {schools.map((s, i) => (
                 <tr key={s.id}>
                   <td>{i+1}</td>
-                  <td><strong>{s.name}</strong>{s.name_fr && <div style={{ fontSize:11, color:'#888' }}>{s.name_fr}</div>}</td>
+                  <td>
+                    <strong>{s.name}</strong>{s.name_fr && <div style={{ fontSize:11, color:'#888' }}>{s.name_fr}</div>}
+                    {s.parent_school_id && schoolsById[s.parent_school_id] && (
+                      <div style={{ fontSize:11, color:'#B8730A' }}>Section of: {schoolsById[s.parent_school_id].name}</div>
+                    )}
+                  </td>
+                  <td><InstitutionBadge type={s.institution_type} /></td>
                   <td>{s.region || '-'}</td>
                   <td style={{ fontWeight:700, color:'#1E88C7' }}>{s.student_count||0}</td>
                   <td style={{ fontWeight:700, color:'#2E9E4E' }}>{s.staff_count||0}</td>
@@ -285,6 +341,19 @@ export default function SuperAdminSchools({ onEnterSchool }) {
                 <div className="form-group">
                   <label>School Name (French)</label>
                   <input value={editForm.name_fr} onChange={e=>setEditForm(p=>({...p,name_fr:e.target.value}))} />
+                </div>
+                <div className="form-group">
+                  <label>Institution Type *</label>
+                  <select value={editForm.institution_type} onChange={e=>setEditForm(p=>({...p,institution_type:e.target.value}))} className="select-input" required>
+                    {INSTITUTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ gridColumn:'1/-1' }}>
+                  <label>Section of an existing school? (optional)</label>
+                  <select value={editForm.parent_school_id} onChange={e=>setEditForm(p=>({...p,parent_school_id:e.target.value}))} className="select-input">
+                    <option value="">- Standalone school, not a section -</option>
+                    {parentOptions(editSchool.id).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Region</label>
