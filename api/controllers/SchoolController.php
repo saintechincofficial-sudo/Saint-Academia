@@ -6,7 +6,7 @@ require_once __DIR__ . '/../utils/TenantContext.php';
 class SchoolController
 {
     // All fields the school profile returns
-    private static $SELECT = 'id, name, name_fr, address, phone, email,
+    private static $SELECT = 'id, parent_school_id, name, name_fr, institution_type, address, phone, email,
         logo_path, letterhead_path, motto, region, delegation,
         po_box, is_active, created_at';
 
@@ -154,6 +154,15 @@ class SchoolController
                 trim($body['po_box']     ?? ''),
             ];
 
+            if (isset($body['institution_type']) && in_array($body['institution_type'], ['primary','secondary','higher_ed'])) {
+                $fields[] = 'institution_type = ?';
+                $params[] = $body['institution_type'];
+            }
+            if (TenantContext::isSuperAdmin() && array_key_exists('parent_school_id', $body)) {
+                $fields[] = 'parent_school_id = ?';
+                $params[] = ($body['parent_school_id'] === '' || $body['parent_school_id'] === null) ? null : (int)$body['parent_school_id'];
+            }
+
             if ($logoPatch !== null) {
                 $fields[] = 'logo_path = ?';
                 $params[] = $logoPatch;
@@ -219,11 +228,12 @@ class SchoolController
 
             $pdo = getDatabaseConnection();
             $pdo->beginTransaction();
-
+            $parentSchoolId = isset($body['parent_school_id']) && $body['parent_school_id'] !== '' ? (int)$body['parent_school_id'] : null;
+            $institutionType = in_array($body['institution_type'] ?? '', ['primary','secondary','higher_ed']) ? $body['institution_type'] : 'secondary';
             $stmt = $pdo->prepare(
-                'INSERT INTO schools (name, name_fr, address, phone, email, is_active) VALUES (?,?,?,?,?,1)'
+                'INSERT INTO schools (name, name_fr, address, phone, email, is_active, institution_type, parent_school_id) VALUES (?,?,?,?,?,1,?,?)'
             );
-            $stmt->execute([$name, $body['name_fr']??'', $body['address']??'', $body['phone']??'', $body['email']??'']);
+            $stmt->execute([$name, $body['name_fr']??'', $body['address']??'', $body['phone']??'', $body['email']??'', $institutionType, $parentSchoolId]);
             $schoolId = (int) $pdo->lastInsertId();
 
             $pdo->prepare(
